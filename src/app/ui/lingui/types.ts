@@ -5,7 +5,7 @@ import {
 } from 'react';
 
 export type LinguiProviderProps = PropsWithChildren<{
-  loadMessages: ((locale: string) => Promise<Messages>) | undefined,
+  loadMessages: (locale: string) => Promise<Messages>,
   locales: readonly string[],
 }>;
 

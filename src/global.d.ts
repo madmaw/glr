@@ -1,9 +1,6 @@
-declare module '*.fbx' {
-  const value: string;
-  export = value;
-}
+import { type Messages } from '@lingui/core';
 
-declare module '*.obj' {
-  const value: string;
+declare module '*.po' {
+  const value: Messages;
   export = value;
 }

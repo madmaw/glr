@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:update": "vitest run -u",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
@@ -33,6 +35,7 @@
     "@storybook/react-vite": "^8.0.5",
     "@storybook/test": "^8.0.5",
     "@styled/typescript-styled-plugin": "^1.0.1",
+    "@testing-library/react": "^15.0.6",
     "@types/react-dom": "^18.2.21",
     "@types/string-format": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
@@ -51,12 +54,14 @@
     "eslint-plugin-storybook": "^0.8.0",
     "eslint-plugin-unused-imports": "^3.1.0",
     "gh-pages": "^6.1.1",
+    "jsdom": "^24.0.0",
     "storybook": "^8.0.5",
     "typescript": "^5.4.2",
     "typescript-eslint": "^7.1.1",
     "vite": "^5.1.5",
     "vite-plugin-eslint": "^1.8.1",
-    "vite-tsconfig-paths": "^4.3.1"
+    "vite-tsconfig-paths": "^4.3.1",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",

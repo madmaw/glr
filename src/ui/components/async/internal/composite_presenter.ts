@@ -12,7 +12,12 @@ import {
   isFailureState,
   isSuccessState,
 } from 'ui/components/async/types';
-import { type CompositeAsyncController } from './controller';
+
+export type CompositeAsyncController<Value, Reason, Progress> = {
+  append(state: AsyncState<Value, Reason, Progress>): () => void,
+
+  readonly state: AsyncState<Value, Reason, Progress>,
+};
 
 export class CompositeAsyncPresenter<Value, Reason, Progress> {
   constructor() {

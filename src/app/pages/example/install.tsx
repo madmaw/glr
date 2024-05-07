@@ -31,6 +31,7 @@ import {
 } from './expression/presenter';
 import { Skeleton } from './skeleton';
 
+// TODO move to separate file
 const Failure: FunctionComponent = createPartialComponent(
   Message,
   {
@@ -39,6 +40,7 @@ const Failure: FunctionComponent = createPartialComponent(
   },
 );
 
+// TODO move to separate file
 const Loading: FunctionComponent = createPartialComponent(
   Message,
   {
@@ -58,7 +60,7 @@ export function install({
   LinguiProvider: LinguiProvider,
 }): Page {
   async function loadMessages(locale: string) {
-    // add in some delay for demonstration purposes only
+    // add in delay for demonstration purposes only
     await delay(200);
     return import(`./locales/${locale}.po`);
   }

@@ -34,12 +34,12 @@ export class LinguiPresenter {
     locales: readonly string[],
     loadMessages: (locale: string) => Promise<Messages>,
   ) {
-    const cleanedLocales = expandLocales(locales);
+    const expandedLocales = expandLocales(locales);
     runInAction(function () {
       model.pendingLocaleCount++;
     });
     // try to find a supported message
-    for (const locale of cleanedLocales) {
+    for (const locale of expandedLocales) {
       runInAction(function () {
         model.activeLocale = locale;
       });
@@ -53,7 +53,7 @@ export class LinguiPresenter {
         }
         break;
       } catch (e) {
-        if (locale === cleanedLocales[cleanedLocales.length - 1]) {
+        if (locale === expandedLocales[expandedLocales.length - 1]) {
           runInAction(function () {
             model.errored = true;
             model.pendingLocaleCount--;
@@ -61,7 +61,7 @@ export class LinguiPresenter {
               model.activeLocale = undefined;
             }
           });
-          throw new LocalesLoadError(cleanedLocales, e);
+          throw new LocalesLoadError(expandedLocales, e);
         } else {
           // just keep going
           this.loggingService.warn(`failed to load locale: ${locale}`, {

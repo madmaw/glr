@@ -1,3 +1,4 @@
+import { AsyncBoundary } from 'ui/components/async/boundary';
 import {
   Size,
   SizeProvider,
@@ -9,7 +10,6 @@ import {
   RouteType,
   type RoutingContext,
 } from './types';
-import { AsyncBoundary } from './ui/async/boundary';
 import { install as installUI } from './ui/install';
 import { Display } from './ui/metrics/types';
 import { Themes } from './ui/theme/types';

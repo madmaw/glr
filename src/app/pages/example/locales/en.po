@@ -20,5 +20,58 @@ msgstr ""
 
 #. js-lingui-explicit-id
 #: src/app/pages/example/install.tsx:29
-msgid "msg.title"
-msgstr "Example"
+#~ msgid "msg.title"
+#~ msgstr "Example"
+
+#. js-lingui-explicit-id
+#: src/app/pages/example/expression/input.tsx:58
+#~ msgid "msg.evaluate"
+#~ msgstr "Evaluate"
+
+#: src/app/pages/example/expression/output.tsx:36
+msgid "Boolean: {0}"
+msgstr "Boolean: {0}"
+
+#: src/app/pages/example/install.tsx:48
+msgid "Calculating…"
+msgstr "Calculating…"
+
+#. text that appears on the evaluate button
+#: src/app/pages/example/expression/input.tsx:64
+#~ msgid "Evaluate"
+#~ msgstr "Evaluate"
+
+#. text that appears on the evaluate button
+#: src/app/pages/example/expression/input.tsx:22
+msgid "Evaluate!"
+msgstr "Evaluate!"
+
+#. example of a valid mathematical expression
+#: src/app/pages/example/expression/input.tsx:18
+#~ msgid "ex. 1 + 1"
+#~ msgstr "ex. 1 + 1"
+
+#. example of a valid mathematical expression
+#: src/app/pages/example/expression/input.tsx:15
+msgid "example: 1 + 1"
+msgstr "example: 1 + 1"
+
+#: src/app/pages/example/expression/output.tsx:29
+msgid "Expression must return a primitive"
+msgstr "Expression must return a primitive"
+
+#: src/app/pages/example/expression/output.tsx:21
+msgid "Invalid Expression"
+msgstr "Invalid Expression"
+
+#: src/app/pages/example/expression/output.tsx:44
+msgid "Number: {0}"
+msgstr "Number: {0}"
+
+#: src/app/pages/example/install.tsx:39
+msgid "Something happened on our end. Please try again"
+msgstr "Something happened on our end. Please try again"
+
+#: src/app/pages/example/expression/output.tsx:52
+msgid "String: {0}"
+msgstr "String: {0}"

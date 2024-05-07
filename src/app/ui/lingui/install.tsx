@@ -1,10 +1,10 @@
 import { i18n } from '@lingui/core';
 import { I18nProvider } from '@lingui/react';
 import { type LoggingService } from 'app/services/logging';
-import { AsyncBoundaryDelegate } from 'app/ui/async/boundary';
 import { useAsyncEffect } from 'base/react/async';
 import { usePartialObserverComponent } from 'base/react/partial';
 import { useMemo } from 'react';
+import { AsyncBoundaryDelegate } from 'ui/components/async/boundary';
 import {
   LinguiModel,
   LinguiPresenter,
@@ -30,9 +30,7 @@ export function install({
       return new LinguiModel();
     }, []);
     useAsyncEffect(async function () {
-      if (loadMessages) {
-        return presenter.loadLocale(model, locales, loadMessages);
-      }
+      return presenter.loadLocale(model, locales, loadMessages);
     }, [
       model,
       locales,

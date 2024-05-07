@@ -17,11 +17,11 @@ import {
   AsyncStateType,
 } from 'ui/components/async/types';
 import { Expander } from 'ui/components/expander';
-import { type CompositeAsyncController } from './controller';
 import {
+  type CompositeAsyncController,
   CompositeAsyncModel,
   CompositeAsyncPresenter,
-} from './presenter';
+} from './internal/composite_presenter';
 
 const context = createContext<CompositeAsyncController<void, void, void> | undefined>(undefined);
 
