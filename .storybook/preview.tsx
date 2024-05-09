@@ -1,19 +1,20 @@
 import styled from '@emotion/styled';
 import type { Preview } from '@storybook/react';
-import { metrics as defaultMetrics } from 'app/ui/metrics/base';
-import {
-  darkTheme,
-  lightTheme,
-} from 'app/ui/theme/themes';
 import { reverse } from 'base/record';
 import type Color from 'colorjs.io';
+import { testMetrics } from 'testing/metrics';
+import {
+  createSelectInputTypes,
+  LocaleProvider,
+} from 'testing/storybook';
+import { testTheme } from 'testing/theme';
+import { AsyncBoundary } from 'ui/components/async/boundary';
 import {
   type Metrics,
   MetricsProvider,
   Size,
   SizeProvider,
 } from 'ui/metrics';
-import { createSelectInputTypes } from 'ui/storybook/select';
 import {
   type Theme,
   ThemeProvider,
@@ -42,23 +43,28 @@ const sizeLabels: Record<Size, string> = {
 
 const preview: Preview = {
   args: {
-    theme: lightTheme,
+    theme: testTheme,
     size: Size.Medium,
-    metrics: defaultMetrics,
-    // TODO locale
+    metrics: testMetrics,
+    locale: 'en',
   },
   argTypes: {
     // TODO complains Theme has a cycle in it (probably due to color object). Claims can be fixed
     // by supplying mapping, however we do this here and it still complains
+    // TODO different themes for different modes
     theme: createSelectInputTypes({
-      ['Light']: lightTheme,
-      ['Dark']: darkTheme,
+      ['Light']: testTheme,
+      ['Dark']: testTheme,
     }),
+    // TODO different metrics for different modes
     metrics: createSelectInputTypes({
-      ['Desktop']: defaultMetrics,
-      ['Mobile']: defaultMetrics,
+      ['Desktop']: testMetrics,
+      ['Mobile']: testMetrics,
     }),
     size: createSelectInputTypes(reverse(sizeLabels)),
+    locale: createSelectInputTypes({
+      en: 'en',
+    }),
   },
   parameters: {
     controls: {
@@ -77,11 +83,13 @@ const preview: Preview = {
         theme,
         size,
         metrics,
+        locale,
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       } = args as {
         theme: Theme,
         size: Size,
         metrics: Record<Size, Metrics>,
+        locale: string,
       };
       return (
         <Container backgroundColor={theme.background}>
@@ -89,7 +97,11 @@ const preview: Preview = {
             <ThemeProvider theme={theme}>
               <MetricsProvider metrics={metrics}>
                 <SizeProvider size={size}>
-                  <Story />
+                  <LocaleProvider value={locale}>
+                    <AsyncBoundary>
+                      <Story />
+                    </AsyncBoundary>
+                  </LocaleProvider>
                 </SizeProvider>
               </MetricsProvider>
             </ThemeProvider>

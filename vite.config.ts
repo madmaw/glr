@@ -19,6 +19,11 @@ export default defineConfig(function (env: ConfigEnv) {
       tsconfigPaths(),
       env.mode !== 'test' && eslint({
         lintOnStart: true,
+        exclude: [
+          '/virtual:/**',
+          '/sb-preview',
+          'node_modules',
+        ],
       }),
       react({
         // babel: {

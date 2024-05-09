@@ -51,35 +51,11 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    // this rule needs to go before the dprint rule as there is a race condition otherwise
     '@typescript-eslint/consistent-type-imports': [
       'warn',
       {
         prefer: 'type-imports',
         fixStyle: 'inline-type-imports',
-      },
-    ],
-    'dprint-integration/dprint': [
-      'error',
-      {},
-      {
-        typescript: {
-          quoteStyle: 'alwaysSingle',
-          'functionExpression.spaceBeforeParentheses': true,
-          trailingCommas: 'onlyMultiLine',
-          quoteProps: 'asNeeded',
-          'parameters.preferHanging': 'onlySingleItem',
-          preferHanging: true,
-          preferSingleLine: false,
-          'jsx.bracketPosition': 'nextLine',
-          'jsx.forceNewLinesSurroundingContent': true,
-          'module.sortImportDeclarations': 'caseInsensitive',
-          'module.sortExportDeclarations': 'caseInsensitive',
-          'importDeclaration.sortNamedImports': 'caseInsensitive',
-          'typeLiteral.separatorKind': 'comma',
-          'jsx.multiLineParens': 'always',
-        },
-        json: {},
       },
     ],
     'no-console': ['warn'],
@@ -162,6 +138,10 @@ module.exports = {
     'import/no-relative-packages': ['error'],
     'import/no-cycle': ['error'],
     'import/no-self-import': ['error'],
+    'import/extensions': [
+      'error',
+      'never',
+    ],
     'import/no-unresolved': 'error',
     'no-relative-import-paths/no-relative-import-paths': [
       'warn',
@@ -226,6 +206,31 @@ module.exports = {
           '{}': false,
         },
         extendDefaults: true,
+      },
+    ],
+    // dprint should go last as it seems to cause race conditions with other rules. Suspect it runs
+    // asynchronously where as eslint rules are synchronous
+    'dprint-integration/dprint': [
+      'error',
+      {},
+      {
+        typescript: {
+          quoteStyle: 'alwaysSingle',
+          'functionExpression.spaceBeforeParentheses': true,
+          trailingCommas: 'onlyMultiLine',
+          quoteProps: 'asNeeded',
+          'parameters.preferHanging': 'onlySingleItem',
+          preferHanging: true,
+          preferSingleLine: false,
+          'jsx.bracketPosition': 'nextLine',
+          'jsx.forceNewLinesSurroundingContent': true,
+          'module.sortImportDeclarations': 'caseInsensitive',
+          'module.sortExportDeclarations': 'caseInsensitive',
+          'importDeclaration.sortNamedImports': 'caseInsensitive',
+          'typeLiteral.separatorKind': 'comma',
+          'jsx.multiLineParens': 'always',
+        },
+        json: {},
       },
     ],
   },

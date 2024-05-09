@@ -3,10 +3,6 @@ import { useMetrics } from 'ui/metrics';
 import { useTheme } from 'ui/theme';
 import { type Typography } from 'ui/typography';
 import { AlertIcon as InternalAlertIcon } from './internal/alert';
-import {
-  ExpandedOrCollapsedIcon as InternalExpandedOrCollapsedIcon,
-  type ExpandOrCollapseProps,
-} from './internal/expanded_or_collapsed';
 import { SpinnerIcon as InternalSpinnerIcon } from './internal/spinner';
 import { type IconProps as InternalIconProps } from './internal/types';
 
@@ -44,5 +40,6 @@ function toInline<
 }
 
 export const AlertIcon = toInline<{}>(InternalAlertIcon);
-export const ExpandOrCollapseIcon = toInline<ExpandOrCollapseProps>(InternalExpandedOrCollapsedIcon);
+// for some reason, breaks Storybook, but is unused (suspect it breaks it because it is unused)
+// export const ExpandOrCollapseIcon = toInline<ExpandOrCollapseProps>(InternalExpandedOrCollapsedIcon);
 export const SpinnerIcon = toInline<{}>(InternalSpinnerIcon);
