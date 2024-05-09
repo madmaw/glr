@@ -49,6 +49,12 @@ const Loading: FunctionComponent = createPartialComponent(
   },
 );
 
+async function loadMessages(locale: string) {
+  // add in delay for demonstration purposes only
+  await delay(200);
+  return import(`./locales/${locale}.po`);
+}
+
 export function install({
   services: {
     loggingService,
@@ -59,12 +65,6 @@ export function install({
   services: Services,
   LinguiProvider: LinguiProvider,
 }): Page {
-  async function loadMessages(locale: string) {
-    // add in delay for demonstration purposes only
-    await delay(200);
-    return import(`./locales/${locale}.po`);
-  }
-
   const presenter = new ExpressionPresenter(loggingService, expressionService);
 
   function Component({

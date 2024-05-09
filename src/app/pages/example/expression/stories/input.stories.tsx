@@ -7,12 +7,17 @@ import {
   ExpressionInput,
   type ExpressionInputProps,
 } from 'app/pages/example/expression/input';
-import { LocaleConsumer } from 'app/pages/example/testing/storybook';
-import { createPartialComponent } from 'base/react/partial';
+import { StorybookLocaleConsumer } from 'app/pages/example/testing/storybook';
+import { createPartialObserverComponent } from 'base/react/partial';
 
-const LocalizedExpressionInput = createPartialComponent(LocaleConsumer<ExpressionInputProps>, {
-  StorybookComponent: ExpressionInput,
-});
+const LocalizedExpressionInput = createPartialObserverComponent(
+  StorybookLocaleConsumer,
+  function (props: ExpressionInputProps) {
+    return {
+      children: <ExpressionInput {...props} />,
+    };
+  },
+);
 
 const meta: Meta<typeof LocalizedExpressionInput> = {
   component: LocalizedExpressionInput,

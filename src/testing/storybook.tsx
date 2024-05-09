@@ -1,12 +1,11 @@
 import { i18n } from '@lingui/core';
 import { I18nProvider } from '@lingui/react';
-
 import { logger } from '@storybook/client-logger';
 import { type InputType } from '@storybook/types';
 import { useAsyncEffect } from 'base/react/async';
 import {
-  type ComponentType,
   createContext,
+  type PropsWithChildren,
   useContext,
   useState,
 } from 'react';
@@ -32,20 +31,18 @@ export function createSelectInputTypes<
   };
 }
 
-const localeContext = createContext<string>('en');
+export const storybookLocaleContext = createContext<string>('en');
 
-export const LocaleProvider = localeContext.Provider;
+export const StorybookLocaleProvider = storybookLocaleContext.Provider;
 
-export type LocaleConsumerProps<P> = P & {
-  StorybookComponent: ComponentType<Omit<P, 'StorybookComponent' | 'messagesPath'>>,
+export type StorybookLocaleConsumerProps = PropsWithChildren<{
   messagesPath: string,
-};
+}>;
 
-export function LocaleConsumer<P>({
-  StorybookComponent,
+export function StorybookLocaleConsumer({
+  children,
   messagesPath,
-  ...remainder
-}: LocaleConsumerProps<P>) {
+}: StorybookLocaleConsumerProps) {
   // TODO presenter?
   const [
     state,
@@ -54,7 +51,7 @@ export function LocaleConsumer<P>({
     type: AsyncStateType.Loading,
     progress: undefined,
   });
-  const locale = useContext(localeContext);
+  const locale = useContext(storybookLocaleContext);
   useAsyncEffect(async function () {
     let canceled = false;
     try {
@@ -91,7 +88,7 @@ export function LocaleConsumer<P>({
   return (
     <AsyncBoundaryDelegate state={state}>
       <I18nProvider i18n={i18n}>
-        <StorybookComponent {...remainder} />
+        {children}
       </I18nProvider>
     </AsyncBoundaryDelegate>
   );

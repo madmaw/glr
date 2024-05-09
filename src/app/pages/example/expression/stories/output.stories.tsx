@@ -6,12 +6,17 @@ import {
   ExpressionOutput,
   type ExpressionOutputProps,
 } from 'app/pages/example/expression/output';
-import { LocaleConsumer } from 'app/pages/example/testing/storybook';
-import { createPartialComponent } from 'base/react/partial';
+import { StorybookLocaleConsumer } from 'app/pages/example/testing/storybook';
+import { createPartialObserverComponent } from 'base/react/partial';
 
-const LocalizedExpressionOutput = createPartialComponent(LocaleConsumer<ExpressionOutputProps>, {
-  StorybookComponent: ExpressionOutput,
-});
+const LocalizedExpressionOutput = createPartialObserverComponent(
+  StorybookLocaleConsumer,
+  function (props: ExpressionOutputProps) {
+    return {
+      children: <ExpressionOutput {...props} />,
+    };
+  },
+);
 
 const meta: Meta<typeof LocalizedExpressionOutput> = {
   component: LocalizedExpressionOutput,
