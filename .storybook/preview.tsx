@@ -5,7 +5,7 @@ import type Color from 'colorjs.io';
 import { testMetrics } from 'testing/metrics';
 import {
   createSelectInputTypes,
-  LocaleProvider,
+  StorybookLocaleProvider,
 } from 'testing/storybook';
 import { testTheme } from 'testing/theme';
 import { AsyncBoundary } from 'ui/components/async/boundary';
@@ -97,11 +97,11 @@ const preview: Preview = {
             <ThemeProvider theme={theme}>
               <MetricsProvider metrics={metrics}>
                 <SizeProvider size={size}>
-                  <LocaleProvider value={locale}>
+                  <StorybookLocaleProvider value={locale}>
                     <AsyncBoundary>
                       <Story />
                     </AsyncBoundary>
-                  </LocaleProvider>
+                  </StorybookLocaleProvider>
                 </SizeProvider>
               </MetricsProvider>
             </ThemeProvider>
