@@ -30,7 +30,7 @@ export function checkState(
   }
 }
 
-export function checkSingleton<T>(
+export function checkUnary<T>(
   t: readonly T[],
   message: string,
   ...args: readonly Arg[]

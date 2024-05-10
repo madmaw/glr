@@ -7,7 +7,7 @@ import { MESSAGES_PATH } from 'app/pages/example/testing/storybook';
 import { LocalExpressionService } from 'app/services/local/expression';
 import { ConsoleLoggingService } from 'app/services/local/logging';
 import { type LinguiProviderProps } from 'app/ui/lingui/types';
-import { checkSingleton } from 'base/preconditions';
+import { checkUnary } from 'base/preconditions';
 import { useContext } from 'react';
 import {
   createStorybookLoadMessages,
@@ -22,7 +22,7 @@ function LinguiProvider({
 }: LinguiProviderProps) {
   return (
     <StorybookLinguiProvider
-      locale={checkSingleton(locales, 'expected single locale, got: {0}', locales.join())}
+      locale={checkUnary(locales, 'expected single locale, got: {0}', locales.join())}
       loadMessages={loadMessages}
     >
       {children}
@@ -44,7 +44,6 @@ const {
 
 function WrappedComponent() {
   const locale = useContext(storybookLocaleContext);
-  // use pre-existing locale
   return <Component locales={[locale]} />;
 }
 
