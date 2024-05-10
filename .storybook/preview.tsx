@@ -46,7 +46,7 @@ const preview: Preview = {
     theme: testTheme,
     size: Size.Medium,
     metrics: testMetrics,
-    locale: 'en',
+    locale: 'pseudo_en',
   },
   argTypes: {
     // TODO complains Theme has a cycle in it (probably due to color object). Claims can be fixed
@@ -64,6 +64,7 @@ const preview: Preview = {
     size: createSelectInputTypes(reverse(sizeLabels)),
     locale: createSelectInputTypes({
       en: 'en',
+      pseudo_en: 'pseudo_en',
     }),
   },
   parameters: {

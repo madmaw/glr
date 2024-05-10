@@ -63,6 +63,7 @@ export function install({
 }: {
   services: Services,
   LinguiProvider: LinguiProvider,
+  // make loadMessages parameterized so storybook can override, otherwise never override
   loadMessages?: (locale: string) => Promise<Messages>,
 }): Page {
   const presenter = new ExpressionPresenter(loggingService, expressionService);
