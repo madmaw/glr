@@ -1,9 +1,9 @@
+import { type Messages } from '@lingui/core';
 import { t } from '@lingui/macro';
 import { type Page } from 'app/pages/types';
 import { type Result } from 'app/services/expression';
 import { type Services } from 'app/services/types';
 import { type LinguiProvider } from 'app/ui/lingui/types';
-import { delay } from 'base/delay';
 import { useDeferredConstant } from 'base/react/constant';
 import { useObserverComponent } from 'base/react/mobx';
 import {
@@ -49,9 +49,7 @@ const Loading: FunctionComponent = createPartialComponent(
   },
 );
 
-async function loadMessages(locale: string) {
-  // add in delay for demonstration purposes only
-  await delay(200);
+async function defaultLoadMessages(locale: string) {
   return import(`./locales/${locale}.po`);
 }
 
@@ -61,9 +59,11 @@ export function install({
     expressionService,
   },
   LinguiProvider,
+  loadMessages = defaultLoadMessages,
 }: {
   services: Services,
   LinguiProvider: LinguiProvider,
+  loadMessages?: (locale: string) => Promise<Messages>,
 }): Page {
   const presenter = new ExpressionPresenter(loggingService, expressionService);
 

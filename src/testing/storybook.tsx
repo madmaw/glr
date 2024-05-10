@@ -1,4 +1,5 @@
 import { i18n } from '@lingui/core';
+import { type Messages } from '@lingui/core';
 import { I18nProvider } from '@lingui/react';
 import { logger } from '@storybook/client-logger';
 import { type InputType } from '@storybook/types';
@@ -7,6 +8,7 @@ import {
   createContext,
   type PropsWithChildren,
   useContext,
+  useMemo,
   useState,
 } from 'react';
 import { AsyncBoundaryDelegate } from 'ui/components/async/boundary';
@@ -39,10 +41,39 @@ export type StorybookLocaleConsumerProps = PropsWithChildren<{
   messagesPath: string,
 }>;
 
+export function createStorybookLoadMessages(messagesPath: string) {
+  return async function (locale: string) {
+    const { messages } = await requireTranslations(`${messagesPath}/${locale}`);
+    return messages;
+  };
+}
+
 export function StorybookLocaleConsumer({
-  children,
   messagesPath,
+  children,
 }: StorybookLocaleConsumerProps) {
+  const locale = useContext(storybookLocaleContext);
+  const loadMessages = useMemo(function () {
+    return createStorybookLoadMessages(messagesPath);
+  }, [messagesPath]);
+  return (
+    <StorybookLinguiProvider
+      locale={locale}
+      loadMessages={loadMessages}
+    >
+      {children}
+    </StorybookLinguiProvider>
+  );
+}
+
+export function StorybookLinguiProvider({
+  locale,
+  loadMessages,
+  children,
+}: PropsWithChildren<{
+  loadMessages: (locale: string) => Promise<Messages>,
+  locale: string,
+}>) {
   // TODO presenter?
   const [
     state,
@@ -51,7 +82,6 @@ export function StorybookLocaleConsumer({
     type: AsyncStateType.Loading,
     progress: undefined,
   });
-  const locale = useContext(storybookLocaleContext);
   useAsyncEffect(async function () {
     let canceled = false;
     try {
@@ -59,7 +89,7 @@ export function StorybookLocaleConsumer({
         type: AsyncStateType.Loading,
         progress: undefined,
       });
-      const { messages } = await requireTranslations(`${messagesPath}/${locale}`);
+      const messages = await loadMessages(locale);
       if (!canceled) {
         i18n.loadAndActivate({
           locale,
@@ -81,7 +111,7 @@ export function StorybookLocaleConsumer({
       canceled = true;
     };
   }, [
-    messagesPath,
+    loadMessages,
     locale,
   ]);
 

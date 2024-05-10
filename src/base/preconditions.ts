@@ -29,3 +29,14 @@ export function checkState(
     throw new PreconditionFailedError(message, args);
   }
 }
+
+export function checkSingleton<T>(
+  t: readonly T[],
+  message: string,
+  ...args: readonly Arg[]
+): T {
+  if (t.length !== 1) {
+    throw new PreconditionFailedError(message, args);
+  }
+  return t[0];
+}
