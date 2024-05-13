@@ -36,7 +36,7 @@ const Failure: FunctionComponent = createPartialComponent(
   Message,
   {
     Icon: AlertIcon,
-    message: t`Something happened on our end. Please try again`,
+    message: t`Something happened on our end. Please refresh the page.`,
   },
 );
 
