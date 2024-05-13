@@ -15,7 +15,7 @@ import { Display } from './ui/metrics/types';
 import { Themes } from './ui/theme/types';
 
 export function install(_url: string) {
-  // TODO extract from the current URL and query params
+  // TODO routing based on current URL (and feedback current application state into browser location)
   const route: Route = {
     type: RouteType.Example,
   };
