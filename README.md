@@ -30,7 +30,7 @@ Specifically
 
 ### Installers
 
-Installers are just functions that create (or somethings enhance) things based on the parameters provided. An example of an installer could be
+Installers are just functions that create (or sometimes enhance) things based on the parameters provided. An example of an installer could be
 
 ```
 type Greeter = {
