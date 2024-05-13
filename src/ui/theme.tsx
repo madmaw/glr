@@ -11,6 +11,10 @@ import {
   type Typography,
 } from './typography';
 
+// TODO using a complex Color object for the theme is inefficient, encourages modification of those
+// themed colors and Storybook complains that it can't serialize the Color objects. Colors should
+// just be (hex) strings.
+
 export type Theme = {
   foreground: Color,
   background: Color,
