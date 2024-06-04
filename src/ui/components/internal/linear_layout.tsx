@@ -12,29 +12,36 @@ export enum Direction {
   Column = 'column',
 }
 
+export type Size = 'expand' | number;
+
 export type LinearLayoutProps = PropsWithChildren<{
   direction: Direction,
   alignment?: Alignment,
   crossAlignment?: Alignment,
   gap?: 0 | 1,
+  size?: Size,
 }>;
 
-// change the name of the reserved words
-export type InternalLinearLayoutProps = PropsWithChildren<{
-  directionInt: Direction,
-  alignmentInt?: Alignment,
+// change the name of the reserved words (add 'Internal' postfix)
+type ContainerProps = {
+  directionInternal: Direction,
+  alignmentInternal?: Alignment,
   crossAlignment?: Alignment,
-  gap?: 0 | 1,
-}>;
-
-export const _LinearLayout = styled.div<Omit<InternalLinearLayoutProps, 'gap'> & {
+  sizeInternal: Size | undefined,
   gap: number,
-}>`
+};
+
+const Container = styled.div<ContainerProps>`
+  label: ${({ directionInternal }) => directionInternal};
   display: flex;
-  flex-direction: ${({ directionInt }) => directionInt};
-  justify-content: ${({ alignmentInt }) => alignmentInt};
+  flex-direction: ${({ directionInternal }) => directionInternal};
+  justify-content: ${({ alignmentInternal }) => alignmentInternal};
   align-items: ${({ crossAlignment }) => crossAlignment};
   gap: ${({ gap }) => gap}px;
+  flex-grow: ${({ sizeInternal }) => sizeInternal === 'expand' ? 1 : 0};
+  flex-shrink: ${({ sizeInternal }) => sizeInternal === 'expand' ? 1 : 0};
+  flex-basis: ${({ sizeInternal }) =>
+  sizeInternal == null ? 'fit-content' : sizeInternal === 'expand' ? 'min-content' : `${sizeInternal}px`};
 `;
 
 export function LinearLayout(props:
@@ -44,13 +51,16 @@ export function LinearLayout(props:
   const {
     direction,
     alignment,
+    size,
+    ...remainingProps
   } = props;
   const metrics = useMetrics();
   return (
-    <_LinearLayout
-      {...props}
-      directionInt={direction}
-      alignmentInt={alignment}
+    <Container
+      {...remainingProps}
+      directionInternal={direction}
+      alignmentInternal={alignment}
+      sizeInternal={size === 'expand' || size == null ? size : size * metrics.gridBaseline}
       gap={(props.gap ?? 0) * metrics.gridBaseline}
     />
   );

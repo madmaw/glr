@@ -1,8 +1,8 @@
 import { createPartialComponent } from 'base/react/partial';
 import {
+  type ComponentType,
   type FunctionComponent,
   type PropsWithChildren,
-  useMemo,
 } from 'react';
 import { Alignment } from 'ui/alignment';
 import { Aligner } from 'ui/components/aligner';
@@ -13,10 +13,11 @@ import {
 } from 'ui/components/icon/icons';
 import { RenderChildren } from 'ui/components/render_children';
 import { Typography } from 'ui/typography';
-import { type AsyncStateType } from './types';
+import { type AsyncState } from './types';
 
-export type GenericAsyncProps = PropsWithChildren<{
-  state: { type: AsyncStateType },
+export type GenericAsyncProps<Value> = PropsWithChildren<{
+  state: AsyncState<Value, void, void>,
+  Success?: ComponentType<PropsWithChildren<{ value: Value }>>,
 }>;
 
 // note: has to be typed as FunctionComponent to convince
@@ -39,28 +40,19 @@ const Loading: FunctionComponent = createPartialComponent(
   },
 );
 
-export function GenericAsync({
+export function GenericAsync<Value = void>({
   children,
-  state: {
-    type,
-  },
-}: GenericAsyncProps) {
-  const CustomAsync = CustomAsyncImpl<void>;
-  const state = useMemo(function () {
-    return {
-      type,
-      value: undefined,
-      reason: undefined,
-      progress: undefined,
-    };
-  }, [type]);
+  state,
+  Success = RenderChildren,
+}: GenericAsyncProps<Value>) {
+  const CustomAsync = CustomAsyncImpl<Value>;
 
   return (
     <CustomAsync
       state={state}
       Failure={Failure}
       Loading={Loading}
-      Success={RenderChildren}
+      Success={Success}
     >
       {children}
     </CustomAsync>

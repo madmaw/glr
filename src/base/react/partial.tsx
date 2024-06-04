@@ -9,7 +9,7 @@ import {
 
 export function createPartialComponent<
   ComponentProps,
-  CurriedProps extends Partial<ComponentProps>,
+  CurriedProps extends Partial<ComponentProps> = Partial<ComponentProps>,
 >(
   Component: ComponentType<ComponentProps>,
   curriedProps: CurriedProps,

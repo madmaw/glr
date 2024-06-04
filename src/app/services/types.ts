@@ -1,12 +1,12 @@
-import { type ExpressionService } from './expression';
+import { type DocumentService } from './document';
 import { type LoggingService } from './logging';
 
 export type Services = {
   readonly loggingService: LoggingService,
-  readonly expressionService: ExpressionService,
+  readonly documentService: DocumentService,
 };
 
 export type ServicesDescriptor = {
   readonly loggingService: 'local',
-  readonly expressionService: 'local',
+  readonly documentService: 'local',
 };

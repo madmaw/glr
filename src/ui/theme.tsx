@@ -18,6 +18,7 @@ import {
 export type Theme = {
   foreground: Color,
   background: Color,
+  disabled: Color,
   typography: Record<Typography, {
     fontFamily: string,
     fontWeight: FontWeight,

@@ -12,11 +12,11 @@ const config: LinguiConfig = {
   },
   catalogs: [
     {
-      path: '<rootDir>/src/app/pages/example/locales/{locale}',
+      path: '<rootDir>/src/app/pages/edit/locales/{locale}',
       // note that lingui cannot parse annotations, so we are stuck
       // only looking at tsx files which (by convention) do not have
       // annotations
-      include: ['src/app/pages/example/**/*.tsx'],
+      include: ['src/app/pages/edit/**/*.tsx'],
     },
   ],
 };

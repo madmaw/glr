@@ -16,14 +16,15 @@ import {
   type AsyncState,
   AsyncStateType,
 } from 'ui/components/async/types';
-import { Expander } from 'ui/components/expander';
+import { Overlayer } from 'ui/components/overlayer';
+import { RenderChildren } from 'ui/components/render_children';
 import {
   type CompositeAsyncController,
   CompositeAsyncModel,
   CompositeAsyncPresenter,
 } from './internal/composite_presenter';
 
-const context = createContext<CompositeAsyncController<void, void, void> | undefined>(undefined);
+const context = createContext<CompositeAsyncController<unknown, void, void> | null>(null);
 
 const presenter = new CompositeAsyncPresenter<void, void, void>();
 
@@ -50,7 +51,7 @@ export function AsyncBoundaryOnly({ children }: PropsWithChildren) {
 }
 
 export type AsyncBoundaryDisplayProps = PropsWithChildren<{
-  Async?: ComponentType<GenericAsyncProps>,
+  Async?: ComponentType<GenericAsyncProps<unknown>>,
 }>;
 
 export function AsyncBoundaryDisplay({
@@ -69,10 +70,10 @@ export function AsyncBoundaryDisplay({
   ]);
   // TODO suspect unmounting the children on means the child models never get created
   return (
-    <Expander>
+    <Overlayer>
       <MaybeObservingAsync />
       {children}
-    </Expander>
+    </Overlayer>
   );
 }
 
@@ -92,13 +93,15 @@ export function AsyncBoundary({
 /**
  * Adds the supplied state to the async boundary
  */
-export function AsyncBoundaryDelegate({
+export function AsyncBoundaryDelegate<V = void>({
   state,
   children,
-  FallbackAsync = GenericAsync,
+  Success = RenderChildren,
+  FallbackAsync = GenericAsync<V>,
 }: PropsWithChildren<{
-  state: AsyncState<void, void, void>,
-  FallbackAsync?: ComponentType<GenericAsyncProps>,
+  state: AsyncState<V, void, void>,
+  Success?: ComponentType<PropsWithChildren<{ value: V }>>,
+  FallbackAsync?: ComponentType<GenericAsyncProps<V>>,
 }>) {
   const controller = useContext(context);
   useEffect(function () {
@@ -113,7 +116,10 @@ export function AsyncBoundaryDelegate({
   if (controller == null) {
     // host a fallback async right here if there is no context
     return (
-      <FallbackAsync state={state}>
+      <FallbackAsync
+        state={state}
+        Success={Success}
+      >
         {children}
       </FallbackAsync>
     );
@@ -122,9 +128,9 @@ export function AsyncBoundaryDelegate({
   // nested AsyncBoundaryDelegates if we have to)
   if (state.type === AsyncStateType.Success) {
     return (
-      <>
+      <Success value={state.value}>
         {children}
-      </>
+      </Success>
     );
   }
   return null;

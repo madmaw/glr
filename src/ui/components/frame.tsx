@@ -15,6 +15,7 @@ const InternalFrame = styled.div<{ xGap: number, yGap: number }>`
   xGap,
   yGap,
 }) => `${yGap}px ${xGap}px`};
+  label: frame;
   box-sizing: border-box;
 `;
 

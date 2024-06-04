@@ -9,6 +9,7 @@ import {
 export const lightTheme: Theme = {
   foreground: new Color('black'),
   background: new Color('white'),
+  disabled: new Color('gray'),
   typography: {
     [Typography.Body]: {
       fontFamily: 'sans-serif',
