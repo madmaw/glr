@@ -11,7 +11,9 @@ export function install({ services }: { services: Services }) {
   // TODO selection
   const Menu = installMenu();
   const Layers = installLayers();
-  const Body = installBody();
+  const Body = installBody({
+    services,
+  });
   const Tools = installTools();
   const StatusBar = installStatusBar();
 

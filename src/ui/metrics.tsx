@@ -1,5 +1,5 @@
 import { checkExists } from 'base/preconditions';
-import { createPartialComponent } from 'base/react/partial';
+import { createSimplePartialComponent } from 'base/react/partial';
 import {
   createContext,
   type PropsWithChildren,
@@ -71,8 +71,8 @@ export function Resize({
   );
 }
 
-export const Bigger = createPartialComponent(Resize, { delta: 1 });
-export const Smaller = createPartialComponent(Resize, { delta: -1 });
+export const Bigger = createSimplePartialComponent(Resize, { delta: 1 });
+export const Smaller = createSimplePartialComponent(Resize, { delta: -1 });
 
 export function useMetrics(): Metrics {
   const metrics = checkExists(useContext(metricsContext), 'no metrics context set');

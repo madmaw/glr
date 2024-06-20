@@ -3,7 +3,7 @@ import {
   type Meta,
   type StoryObj,
 } from '@storybook/react';
-import { createPartialComponent } from 'base/react/partial';
+import { createSimplePartialComponent } from 'base/react/partial';
 import {
   useCallback,
   useState,
@@ -64,7 +64,7 @@ function InteractiveStack({
         {
           id: prev.length.toString(),
           title: `Layer ${prev.length}`,
-          Component: createPartialComponent(Panel, {
+          Component: createSimplePartialComponent(Panel, {
             index: prev.length,
             requestBack,
           }),

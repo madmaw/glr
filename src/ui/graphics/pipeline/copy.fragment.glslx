@@ -1,0 +1,6 @@
+uniform sampler2D texture;
+varying lowp vec2 textureCoord;
+
+export void fragment() {
+  gl_FragColor = texture2D(texture, textureCoord);
+}

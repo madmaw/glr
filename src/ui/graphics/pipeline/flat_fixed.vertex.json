@@ -1,0 +1,13 @@
+{
+  "shaders": [
+    {
+      "name": "vertex",
+      "contents": "uniform mat3 u_transform;attribute vec3 a_position;attribute vec2 a_textureCoord;varying vec2 textureCoord;varying vec3 position;void main(){textureCoord=a_textureCoord,position=u_transform*a_position,gl_Position=vec4(position,1);}"
+    }
+  ],
+  "renaming": {
+    "u_transform": "u_transform",
+    "a_position": "a_position",
+    "a_textureCoord": "a_textureCoord"
+  }
+}

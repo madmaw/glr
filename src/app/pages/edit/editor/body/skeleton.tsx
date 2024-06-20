@@ -1,25 +1,32 @@
-import { type ComponentType } from 'react';
+import {
+  type ComponentType,
+  useState,
+} from 'react';
 import { Alignment } from 'ui/alignment';
 import { Aligner } from 'ui/components/aligner';
-import { Frame } from 'ui/components/frame';
 import { Scroller } from 'ui/components/scroller';
 
 export type SkeletonProps = {
-  Content: ComponentType,
+  Content: ComponentType<{ scrollContainer: HTMLElement | null }>,
 };
 
 export function Skeleton({
   Content,
 }: SkeletonProps) {
+  const [
+    scrollViewRef,
+    setScrollViewRef,
+  ] = useState<HTMLElement | null>(null);
   return (
-    <Scroller overflow='auto'>
+    <Scroller
+      overflow='auto'
+      ref={setScrollViewRef}
+    >
       <Aligner
-        xAlignment={Alignment.Middle}
-        yAlignment={Alignment.Middle}
+        xAlignment={Alignment.Stretch}
+        yAlignment={Alignment.Stretch}
       >
-        <Frame gap={1}>
-          <Content />
-        </Frame>
+        <Content scrollContainer={scrollViewRef} />
       </Aligner>
     </Scroller>
   );

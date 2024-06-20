@@ -31,3 +31,5 @@ export function rollup<
 export type Mutable<T> = {
   -readonly [K in keyof T]: T[K];
 };
+
+export type ReadonlyRecord<K extends string | number | symbol, V> = Readonly<Record<K, V>>;

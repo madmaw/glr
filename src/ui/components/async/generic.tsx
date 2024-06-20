@@ -1,4 +1,8 @@
-import { createPartialComponent } from 'base/react/partial';
+import { createSimplePartialComponent } from 'base/react/partial';
+import {
+  observable,
+  runInAction,
+} from 'mobx';
 import {
   type ComponentType,
   type FunctionComponent,
@@ -13,7 +17,10 @@ import {
 } from 'ui/components/icon/icons';
 import { RenderChildren } from 'ui/components/render_children';
 import { Typography } from 'ui/typography';
-import { type AsyncState } from './types';
+import {
+  type AsyncState,
+  AsyncStateType,
+} from './types';
 
 export type GenericAsyncProps<Value> = PropsWithChildren<{
   state: AsyncState<Value, void, void>,
@@ -22,7 +29,7 @@ export type GenericAsyncProps<Value> = PropsWithChildren<{
 
 // note: has to be typed as FunctionComponent to convince
 // TS that it doesn't need an explicit { reason: void } prop
-const Failure: FunctionComponent = createPartialComponent(
+const Failure: FunctionComponent = createSimplePartialComponent(
   Aligner,
   {
     xAlignment: Alignment.Middle,
@@ -31,7 +38,7 @@ const Failure: FunctionComponent = createPartialComponent(
   },
 );
 
-const Loading: FunctionComponent = createPartialComponent(
+const Loading: FunctionComponent = createSimplePartialComponent(
   Aligner,
   {
     xAlignment: Alignment.Middle,
@@ -57,4 +64,46 @@ export function GenericAsync<Value = void>({
       {children}
     </CustomAsync>
   );
+}
+
+export abstract class GenericAsyncPresenter<Value, Model extends GenericAsyncModel<Value>> {
+  constructor() {
+  }
+
+  async load(model: Model) {
+    runInAction(function () {
+      model.state = {
+        type: AsyncStateType.Loading,
+        progress: undefined,
+      };
+    });
+    try {
+      const value = await this.doLoadValue(model);
+      runInAction(function () {
+        model.state = {
+          type: AsyncStateType.Success,
+          value,
+        };
+      });
+    } catch (e: unknown) {
+      runInAction(function () {
+        model.state = {
+          type: AsyncStateType.Failure,
+          reason: undefined,
+        };
+      });
+      // rethrow as we don't report the error
+      throw e;
+    }
+  }
+
+  protected abstract doLoadValue(model: Model): Promise<Value>;
+}
+
+export class GenericAsyncModel<Value> {
+  @observable.ref
+  accessor state: AsyncState<Value, void, void> = {
+    type: AsyncStateType.Loading,
+    progress: undefined,
+  };
 }

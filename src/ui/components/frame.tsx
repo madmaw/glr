@@ -17,6 +17,7 @@ const InternalFrame = styled.div<{ xGap: number, yGap: number }>`
 }) => `${yGap}px ${xGap}px`};
   label: frame;
   box-sizing: border-box;
+  flex: 1;
 `;
 
 export function Frame(props: FrameProps) {

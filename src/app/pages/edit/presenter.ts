@@ -4,55 +4,23 @@ import {
   type MutableDocument,
 } from 'app/domain/model';
 import { type DocumentService } from 'app/services/document';
-import { type LoggingService } from 'app/services/logging';
-import { runInAction } from 'mobx';
 import {
-  type AsyncState,
-  AsyncStateType,
-} from 'ui/components/async/types';
+  GenericAsyncModel,
+  GenericAsyncPresenter,
+} from 'ui/components/async/generic';
 
-export class EditPresenter {
-  constructor(
-    private readonly documentService: DocumentService,
-    private readonly loggingService: LoggingService,
-  ) {
+export class EditPresenter extends GenericAsyncPresenter<MutableDocument, EditModel> {
+  constructor(private readonly documentService: DocumentService) {
+    super();
   }
 
-  async loadDocument(model: EditModel) {
-    runInAction(function () {
-      model.state = {
-        type: AsyncStateType.Loading,
-        progress: undefined,
-      };
-    });
-    const { documentId } = model;
-    try {
-      const document = await this.documentService.getDocument(documentId);
-      const mutableDocument = documentDescriptor.create(document);
-      runInAction(function () {
-        model.state = {
-          type: AsyncStateType.Success,
-          value: mutableDocument,
-        };
-      });
-    } catch (e) {
-      runInAction(function () {
-        model.state = {
-          type: AsyncStateType.Failure,
-          reason: undefined,
-        };
-      });
-      this.loggingService.errorException(e, 'unable to load document');
-    }
+  protected override async doLoadValue({ documentId }: EditModel): Promise<MutableDocument> {
+    const document = await this.documentService.getDocument(documentId);
+    return documentDescriptor.create(document);
   }
 }
-
-export class EditModel {
+export class EditModel extends GenericAsyncModel<MutableDocument> {
   constructor(readonly documentId: DocumentId) {
+    super();
   }
-
-  state: AsyncState<MutableDocument, void, void> = {
-    type: AsyncStateType.Loading,
-    progress: undefined,
-  };
 }

@@ -38,11 +38,11 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:dprint-integration/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'plugin:storybook/recommended',
     'plugin:@eslint-community/eslint-comments/recommended',
+    'plugin:dprint-integration/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -141,6 +141,10 @@ module.exports = {
     'import/extensions': [
       'error',
       'never',
+      {
+        json: 'always',
+        svg: 'always',
+      },
     ],
     'import/no-unresolved': 'error',
     'no-relative-import-paths/no-relative-import-paths': [

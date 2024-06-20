@@ -7,11 +7,9 @@ import {
 import { type Services } from 'app/services/types';
 import { type LinguiProvider } from 'app/ui/lingui/types';
 import { delay } from 'base/delay';
+import { useAsyncEffect } from 'base/react/async';
 import { usePartialObserverComponent } from 'base/react/partial';
-import {
-  useEffect,
-  useMemo,
-} from 'react';
+import { useMemo } from 'react';
 import { AsyncBoundaryDelegate } from 'ui/components/async/boundary';
 import { install as installEditor } from './editor/install';
 import {
@@ -42,7 +40,6 @@ export function install({
   } = services;
   const presenter = new EditPresenter(
     documentService,
-    loggingService,
   );
 
   function Editor({ value }: { value: MutableDocument }) {
@@ -58,8 +55,12 @@ export function install({
     const model = useMemo(function () {
       return new EditModel(documentId);
     }, [documentId]);
-    useEffect(function () {
-      presenter.loadDocument(model);
+    useAsyncEffect(async function () {
+      try {
+        await presenter.load(model);
+      } catch (e) {
+        loggingService.errorException(e);
+      }
     }, [model]);
 
     // TODO may be a good idea to have a custom loading component for this

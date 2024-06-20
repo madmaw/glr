@@ -128,6 +128,7 @@ npm install
 * `ESLint` by `Microsoft`
 * `Code Spell Checker` by `Street Side Software`
 * `vscode-styled-components` by `Styled Components`
+* `glslx-vscode` by `evanw`
 
 ### Running 
 

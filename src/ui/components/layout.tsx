@@ -1,8 +1,8 @@
-import { createPartialComponent } from 'base/react/partial';
+import { createSimplePartialComponent } from 'base/react/partial';
 import {
   Direction,
   LinearLayout,
 } from './internal/linear_layout';
 
-export const Row = createPartialComponent(LinearLayout, { direction: Direction.Row });
-export const Column = createPartialComponent(LinearLayout, { direction: Direction.Column });
+export const Row = createSimplePartialComponent(LinearLayout, { direction: Direction.Row });
+export const Column = createSimplePartialComponent(LinearLayout, { direction: Direction.Column });

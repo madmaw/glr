@@ -1,9 +1,9 @@
 import Format from 'string-format';
 
-export type Arg = string | number | boolean | null | undefined;
+export type FormattingArg = string | number | boolean | null | undefined;
 
 class PreconditionFailedError extends Error {
-  constructor(message: string, args: readonly Arg[]) {
+  constructor(message: string, args: readonly FormattingArg[]) {
     super(Format(message, args));
     this.name = 'PreconditionFailedError';
   }
@@ -12,7 +12,7 @@ class PreconditionFailedError extends Error {
 export function checkExists<T>(
   t: T | null | undefined,
   message: string,
-  ...args: readonly Arg[]
+  ...args: readonly FormattingArg[]
 ): NonNullable<T> {
   if (t == null) {
     throw new PreconditionFailedError(message, args);
@@ -23,8 +23,8 @@ export function checkExists<T>(
 export function checkState(
   condition: boolean,
   message: string,
-  ...args: readonly Arg[]
-): void {
+  ...args: readonly FormattingArg[]
+): asserts condition is true {
   if (!condition) {
     throw new PreconditionFailedError(message, args);
   }
@@ -33,7 +33,7 @@ export function checkState(
 export function checkUnary<T>(
   t: readonly T[],
   message: string,
-  ...args: readonly Arg[]
+  ...args: readonly FormattingArg[]
 ): T {
   if (t.length !== 1) {
     throw new PreconditionFailedError(message, args);
