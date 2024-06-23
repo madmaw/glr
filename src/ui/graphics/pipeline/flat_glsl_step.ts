@@ -15,6 +15,7 @@ import {
 import {
   AbstractStep,
   type Input,
+  type InputUpdate,
 } from './types';
 
 export type UniformParameter =
@@ -180,6 +181,8 @@ class FlatGLSLStep<
   Inputs extends InputParameters,
   Parameters extends UniformParameters,
 > extends AbstractStep<InputParameters, Parameters> {
+  private readonly inputTextures: Partial<Record<keyof Inputs, WebGLTexture>>;
+
   protected get width(): number {
     return this.target.width;
   }
@@ -197,16 +200,16 @@ class FlatGLSLStep<
   ) {
     super(inputs);
     // set the image uniforms
-    const inputUniforms = Object
+    this.inputTextures = Object
       .entries(this.inputs)
-      .reduce<Partial<Record<keyof Input, WebGLTexture>>>(
+      .reduce<Partial<Record<keyof Inputs, WebGLTexture>>>(
         function (acc, [
           key,
           input,
         ]) {
           if (input != null) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            acc[key as keyof Input] = createTexture(
+            acc[key as keyof Inputs] = createTexture(
               gl,
               {
                 src: input.target,
@@ -219,7 +222,7 @@ class FlatGLSLStep<
         },
         {},
       );
-    setUniforms(programInfo, inputUniforms);
+    setUniforms(programInfo, this.inputTextures);
   }
 
   override doUpdateTarget(parameters: Parameters): void {
@@ -252,6 +255,29 @@ class FlatGLSLStep<
       ],
       // TODO camera
     });
+  }
+
+  protected override applyUpdate(inputKey: string, {
+    // TODO can we use the bounds to only update the part of the texture that
+    // has changed?
+    bounds: _bounds,
+  }: InputUpdate): void {
+    const input = this.inputs[inputKey];
+    const texture = this.inputTextures[inputKey];
+    if (input == null || texture == null) {
+      return;
+    }
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    // refresh the texture
+    this.gl.texSubImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      input.target,
+    );
   }
 
   render() {

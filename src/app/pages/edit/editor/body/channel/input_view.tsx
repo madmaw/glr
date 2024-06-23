@@ -21,23 +21,23 @@ const Centerer = styled(Aligner)<{ minWidth: number, minHeight: number }>`
   min-width: ${({ minWidth }) => minWidth}px;
 `;
 
-export enum InputEventType {
+export const enum InputEventType {
   Pointer,
 }
 
 export type InputEventPointer = {
-  type: InputEventType.Pointer,
-  dragging: boolean,
-  x: number,
-  y: number,
+  readonly type: InputEventType.Pointer,
+  readonly dragging: boolean,
+  readonly x: number,
+  readonly y: number,
 };
 
 export type InputEvents = InputEventPointer;
 
 export type InputViewProps = PropsWithEvents<InputEvents, {
-  input: ResizableInput,
-  aspectRatio: number,
-  scale: number,
+  readonly input: ResizableInput,
+  readonly aspectRatio: number,
+  readonly scale: number,
 }>;
 
 export function InputView({
@@ -56,7 +56,7 @@ export function InputView({
   ] = useMemo(function () {
     return [
       scale,
-      aspectRatio * scale,
+      scale / aspectRatio,
     ];
   }, [
     aspectRatio,
@@ -74,11 +74,14 @@ export function InputView({
           type: InputEventType.Pointer,
           dragging: !!(buttons & 1),
           x: offsetX / scale,
-          y: offsetY / scale,
+          y: offsetY * aspectRatio / scale,
         };
       }),
     );
-  }, [scale]);
+  }, [
+    scale,
+    aspectRatio,
+  ]);
 
   useEvents(
     'mousedown',

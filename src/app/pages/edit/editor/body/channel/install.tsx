@@ -1,3 +1,4 @@
+import { type ToolEvent } from 'app/pages/edit/editor/tool/types';
 import { type LoggingService } from 'app/services/logging';
 import { useAsyncEffect } from 'base/react/async';
 import {
@@ -8,10 +9,7 @@ import { useMemo } from 'react';
 import { type PartialObserver } from 'rxjs';
 import { AsyncBoundaryDelegate } from 'ui/components/async/boundary';
 import { type Input } from 'ui/graphics/pipeline/types';
-import {
-  type InputEvents,
-  InputView,
-} from './input_view';
+import { InputView } from './input_view';
 import {
   ChannelModel,
   ChannelPresenter,
@@ -30,8 +28,13 @@ export function install({
   const presenter = new ChannelPresenter();
   return function ({
     input,
+    events,
     scrollContainer,
-  }: { input: Input, scrollContainer: HTMLElement | null }) {
+  }: {
+    input: Input,
+    scrollContainer: HTMLElement | null,
+    events: PartialObserver<ToolEvent>,
+  }) {
     const model = useMemo(function () {
       return new ChannelModel(input);
     }, [input]);
@@ -53,13 +56,13 @@ export function install({
       AsyncBoundaryDelegate<ResizableInput>,
     );
 
-    const events = useMemo<PartialObserver<InputEvents>>(function () {
-      return {
-        next: function (e) {
-          console.log(e);
-        },
-      };
-    }, []);
+    // const events = useMemo<PartialObserver<InputEvents>>(function () {
+    //   return {
+    //     next: function (e) {
+    //       console.log(e);
+    //     },
+    //   };
+    // }, []);
 
     const Success = usePartialComponent(
       function ({ value }: { value: ResizableInput }) {

@@ -42,8 +42,13 @@ export abstract class AbstractStep<Inputs extends Record<string, Input | undefin
 
   constructor(protected readonly inputs: Inputs) {
     this.updates = new Subject();
-    this.subscriptions = Object.values(this.inputs).map(input => {
-      return input?.updates.subscribe(this.fireUpdate.bind(this));
+    this.subscriptions = Object.entries(this.inputs).map(([
+      key,
+      input,
+    ]) => {
+      return input?.updates.subscribe(update => {
+        this.handleUpdate(key, update);
+      });
     }).filter(exists);
   }
 
@@ -67,7 +72,17 @@ export abstract class AbstractStep<Inputs extends Record<string, Input | undefin
 
   protected abstract doUpdateTarget(parameters: Parameters): void;
 
+  protected abstract applyUpdate(inputKey: keyof Inputs, update: InputUpdate): void;
+
   protected abstract render(): void;
+
+  protected handleUpdate(inputKey: keyof Inputs, update: InputUpdate) {
+    this.applyUpdate(inputKey, update);
+    // TODO maybe schedule a rerender so we debounce
+    // TODO only render bounds
+    this.render();
+    this.fireUpdate(update);
+  }
 
   protected fireUpdate(update: InputUpdate) {
     this.updates.next(update);

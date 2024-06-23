@@ -5,7 +5,7 @@ import { install as installLayers } from './layers/install';
 import { install as installMenu } from './menu/install';
 import { Skeleton } from './skeleton';
 import { install as installStatusBar } from './status/install';
-import { install as installTools } from './tools/install';
+import { install as installTools } from './tool/install';
 
 export function install({ services }: { services: Services }) {
   // TODO selection

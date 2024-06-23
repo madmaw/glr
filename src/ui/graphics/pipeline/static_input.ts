@@ -4,9 +4,11 @@ import {
   type InputUpdate,
 } from './types';
 
-export class StaticInput implements Input {
+export class StaticInput<
+  Target extends HTMLImageElement | HTMLCanvasElement = HTMLImageElement | HTMLCanvasElement,
+> implements Input {
   readonly updates = new Subject<InputUpdate>();
 
-  constructor(readonly target: HTMLImageElement | HTMLCanvasElement) {
+  constructor(readonly target: Target) {
   }
 }
