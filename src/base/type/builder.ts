@@ -4,6 +4,7 @@ import {
   type LiteralTypeDef,
   type RecordKey,
   type RecordTypeDef,
+  type RecordTypeDefField,
   type TypeDef,
   TypeDefType,
 } from './definition';
@@ -13,6 +14,7 @@ import { type TypeOf } from './type_of';
 export function literal<T>(): LiteralTypeDefBuilder<T> {
   return new LiteralTypeDefBuilder({
     type: TypeDefType.Literal,
+    value: undefined!,
   });
 }
 
@@ -31,10 +33,7 @@ export function list<T extends TypeDef>(elements: TypeDefBuilder<T>): ListTypeDe
 export function record(): RecordTypeDefBuilder {
   return new RecordTypeDefBuilder({
     type: TypeDefType.Record,
-    mutableFields: {},
-    mutableOptionalFields: {},
-    readonlyFields: {},
-    readonlyOptionalFields: {},
+    fields: {},
   });
 }
 
@@ -72,40 +71,10 @@ class ListTypeDefBuilder<
   }
 }
 
-function maybeAddToFields<
-  Fields extends ReadonlyRecord<RecordKey, TypeDef>,
-  Name extends string,
-  Field extends TypeDef,
-  Add extends boolean,
->(
-  fields: Fields,
-  name: Name,
-  field: Field,
-  add: Add,
-): Add extends true ? Fields & ReadonlyRecord<Name, Field> : Fields {
-  return add
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    ? {
-      ...fields,
-      [name]: field,
-      // doesn't recognize this as being the reported type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any
-    : fields;
-}
-
 class RecordTypeDefBuilder<
-  MutableFields extends ReadonlyRecord<RecordKey, TypeDef> = {},
-  MutableOptionalFields extends ReadonlyRecord<RecordKey, TypeDef> = {},
-  ReadonlyFields extends ReadonlyRecord<RecordKey, TypeDef> = {},
-  ReadonlyOptionalFields extends ReadonlyRecord<RecordKey, TypeDef> = {},
+  Fields extends ReadonlyRecord<RecordKey, RecordTypeDefField> = {},
 > extends TypeDefBuilder<
-  RecordTypeDef<
-    MutableFields,
-    MutableOptionalFields,
-    ReadonlyFields,
-    ReadonlyOptionalFields
-  >
+  RecordTypeDef<Fields>
 > {
   add<
     Name extends string,
@@ -114,62 +83,25 @@ class RecordTypeDefBuilder<
     Optional extends boolean,
   >(
     name: Name,
-    field: RecordFieldDefBuilder<T, Readonly, Optional>,
-  ): Readonly extends true ? Optional extends true ? RecordTypeDefBuilder<
-        MutableFields,
-        MutableOptionalFields,
-        ReadonlyFields,
-        ReadonlyOptionalFields & Record<Name, T>
-      >
-    : RecordTypeDefBuilder<
-      MutableFields,
-      MutableOptionalFields,
-      ReadonlyFields & Record<Name, T>,
-      ReadonlyOptionalFields
-    >
-    : Optional extends true ? RecordTypeDefBuilder<
-        MutableFields,
-        MutableOptionalFields & Record<Name, T>,
-        ReadonlyFields,
-        ReadonlyOptionalFields
-      >
-    : RecordTypeDefBuilder<
-      MutableFields & Record<Name, T>,
-      MutableOptionalFields,
-      ReadonlyFields,
-      ReadonlyOptionalFields
-    >
-  {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    {
+      typeDef,
+      isOptional,
+      isReadonly,
+    }: RecordFieldDefBuilder<T, Readonly, Optional>,
+  ): RecordTypeDefBuilder<
+    Fields & ReadonlyRecord<Name, RecordTypeDefField<T, Readonly, Optional>>
+  > {
     return new RecordTypeDefBuilder({
       type: TypeDefType.Record,
-      mutableFields: maybeAddToFields(
-        this.typeDef.mutableFields,
-        name,
-        field.typeDef,
-        !field.isReadonly && !field.isOptional,
-      ),
-      mutableOptionalFields: maybeAddToFields(
-        this.typeDef.mutableOptionalFields,
-        name,
-        field.typeDef,
-        !field.isReadonly && field.isOptional,
-      ),
-      readonlyFields: maybeAddToFields(
-        this.typeDef.readonlyFields,
-        name,
-        field.typeDef,
-        field.isReadonly && !field.isOptional,
-      ),
-      readonlyOptionalFields: maybeAddToFields(
-        this.typeDef.readonlyOptionalFields,
-        name,
-        field.typeDef,
-        field.isReadonly && field.isOptional,
-      ),
-      // doesn't recognize this as being the reported type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }) as any;
+      fields: {
+        ...this.typeDef.fields,
+        [name]: {
+          valueType: typeDef,
+          optional: isOptional,
+          readonly: isReadonly,
+        },
+      },
+    });
   }
 }
 

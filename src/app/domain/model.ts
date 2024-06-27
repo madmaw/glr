@@ -7,10 +7,9 @@ import {
   stringBuilder,
 } from 'base/type/builder';
 
-export type DocumentId = string;
-
 export type ImageId = string;
 
+export type DocumentId = string;
 const documentIdBuilder = literal<DocumentId>();
 export const documentIdTypeDef = documentIdBuilder.typeDef;
 

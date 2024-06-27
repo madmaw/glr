@@ -1,9 +1,12 @@
+import { type UnionToIntersection } from 'base/lang';
+import { type ReadonlyRecord } from 'base/record';
 import {
-  type DiscriminatedUnionTypeDef,
+  type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
   type RecordKey,
   type RecordTypeDef,
+  type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
   TypeDefType,
@@ -13,7 +16,7 @@ export type FlattenedOf<F extends TypeDef, Prefix extends string = ''> = F exten
   ? FlattenedOfLiteral<F, Prefix>
   : F extends ListTypeDef ? FlattenedOfList<F, Prefix>
   : F extends RecordTypeDef ? FlattenedOfRecord<F, Prefix>
-  : F extends DiscriminatedUnionTypeDef ? FlattenedOfDiscriminatedUnion<F, Prefix>
+  : F extends DiscriminatingUnionTypeDef ? FlattenedOfDiscriminatingUnion<F, Prefix>
   : never;
 
 type PrefixOf<
@@ -26,7 +29,7 @@ type PrefixOf<
 type FlattenedOfLiteral<
   F extends LiteralTypeDef,
   Prefix extends string,
-> = Readonly<Record<Prefix, F>>;
+> = ReadonlyRecord<Prefix, F>;
 
 type FlattenedOfList<
   F extends ListTypeDef,
@@ -34,41 +37,33 @@ type FlattenedOfList<
   Index extends number = number,
 > = F extends ListTypeDef<infer E> ?
     & FlattenedOf<E, PrefixOf<Prefix, Index>>
-    & Readonly<Record<Prefix, F>>
+    & ReadonlyRecord<Prefix, F>
   : never;
 
 type FlattenedOfRecordFieldGroup<
-  Fields extends Record<string, TypeDef>,
+  Fields extends Record<string, RecordTypeDefField>,
   Prefix extends string,
 > = {} extends Fields ? {}
-  : {
+  : UnionToIntersection<{
     readonly [K in keyof Fields]: FlattenedOf<
-      Fields[K],
+      Fields[K]['valueType'],
       PrefixOf<Prefix, K>
     >;
-  }[keyof Fields];
+  }[keyof Fields]>;
 
 type FlattenedOfRecord<
   F extends RecordTypeDefFields,
   Prefix extends string,
-> = F extends RecordTypeDefFields<
-  infer MutableFields,
-  infer MutableOptionalFields,
-  infer ReadonlyFields,
-  infer ReadonlyOptionalFields
-> ?
-    & FlattenedOfRecordFieldGroup<MutableFields, Prefix>
-    & FlattenedOfRecordFieldGroup<MutableOptionalFields, Prefix>
-    & FlattenedOfRecordFieldGroup<ReadonlyFields, Prefix>
-    & FlattenedOfRecordFieldGroup<ReadonlyOptionalFields, Prefix>
+> = F extends RecordTypeDefFields<infer Fields> ?
+    & FlattenedOfRecordFieldGroup<Fields, Prefix>
     // include self
-    & Readonly<Record<Prefix, F>>
+    & ReadonlyRecord<Prefix, F>
   : never;
 
-type FlattenedOfDiscriminatedUnion<
-  F extends DiscriminatedUnionTypeDef,
+type FlattenedOfDiscriminatingUnion<
+  F extends DiscriminatingUnionTypeDef,
   Prefix extends string,
-> = F extends DiscriminatedUnionTypeDef<infer D, infer U>
+> = F extends DiscriminatingUnionTypeDef<infer D, infer U>
   // combine all the possible unions (we don't/can't discriminate on the paths)
   ?
     & {
@@ -79,10 +74,10 @@ type FlattenedOfDiscriminatedUnion<
     }[keyof U]
     // include the discriminator
     & {
-      readonly [K in PrefixOf<Prefix, D>]: LiteralTypeDef<D>;
+      readonly [K in PrefixOf<Prefix, D>]: LiteralTypeDef<keyof U>;
     }
     // include self
-    & Readonly<Record<Prefix, F>>
+    & ReadonlyRecord<Prefix, F>
   : never;
 
 const n: LiteralTypeDef<1 | 3 | 5> = {
@@ -98,38 +93,45 @@ const a: ListTypeDef<typeof n, true> = {
 
 const r = {
   type: TypeDefType.Record,
-  mutableFields: {
-    m: n,
-  },
-  mutableOptionalFields: {
-    om: a,
-  },
-  readonlyFields: {
-    r: n,
-  },
-  readonlyOptionalFields: {
-    or: n,
+  fields: {
+    m: {
+      valueType: n,
+      readonly: false,
+      optional: false,
+    },
+    om: {
+      valueType: a,
+      readonly: false,
+      optional: true,
+    },
+    r: {
+      valueType: n,
+      readonly: true,
+      optional: false,
+    },
+    or: {
+      valueType: n,
+      readonly: true,
+      optional: true,
+    },
   },
 } as const;
 
 const r2 = {
   type: TypeDefType.Record,
-  mutableFields: {
-    m: n,
+  fields: {
+    r: {
+      valueType: n,
+      readonly: false,
+      optional: false,
+    },
   },
-  mutableOptionalFields: {
-    m: n,
-  },
-  readonlyFields: {
-    m: n,
-  },
-  readonlyOptionalFields: {},
 } as const;
 
 const d = {
-  type: TypeDefType.DiscriminatedUnion,
+  type: TypeDefType.DiscriminatingUnion,
   discriminator: 'x',
-  options: {
+  unions: {
     a: r2,
   },
 } as const;
@@ -140,15 +142,32 @@ const ni: FlattenedOf<typeof n, 'ni'> = {
 
 const ai: FlattenedOf<typeof a, 'ai'> = {
   ai: a,
+  'ai.0': n,
+  'ai.1': n,
+  // 'ax': n,
 };
+const ap: (keyof FlattenedOf<typeof a, 'ai'>)[] = [
+  'ai',
+  'ai.0',
+];
 
 const ri: FlattenedOf<typeof r, 'ri'>['ri.om'] = a;
-const rp: keyof FlattenedOf<typeof r, 'rp'> = 'rp.m';
+const rp: (keyof FlattenedOf<typeof r, 'rp'>)[] = [
+  'rp.m',
+  'rp.om',
+  'rp.om.0',
+];
 
-const dr2: FlattenedOfRecord<typeof r2, 'r2'> = {
+const ri2: FlattenedOfRecord<typeof r2, 'r2'> = {
   r2: r2,
-  'r2.m': n,
+  'r2.r': n,
 };
 
-const di: FlattenedOf<typeof d, 'di'>['di.a'] = r2;
-const dp: keyof FlattenedOf<typeof d, 'di'> = 'di.a.m';
+const di: FlattenedOf<typeof d, 'di'>['di.x'] = {
+  type: TypeDefType.Literal,
+  value: 'a',
+};
+const dp: (keyof FlattenedOf<typeof d, 'di'>)[] = [
+  'di.a.r',
+  'di.x',
+];

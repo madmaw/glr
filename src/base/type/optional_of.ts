@@ -1,8 +1,9 @@
 import {
-  type DiscriminatedUnionTypeDef,
+  type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
   type RecordTypeDef,
+  type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
   type TypeDefType,
@@ -11,12 +12,12 @@ import {
 export type OptionalOf<F extends TypeDef> = F extends LiteralTypeDef ? OptionalOfLiteral<F>
   : F extends ListTypeDef ? OptionalOfList<F>
   : F extends RecordTypeDef ? OptionalOfRecord<F>
-  : F extends DiscriminatedUnionTypeDef ? OptionalOfDiscriminatedUnion<F>
+  : F extends DiscriminatingUnionTypeDef ? OptionalOfDiscriminatedUnion<F>
   : never;
 
 type OptionalOfLiteral<F extends LiteralTypeDef> = F extends LiteralTypeDef<infer V> ? {
     type: TypeDefType.Literal,
-    value?: V | undefined,
+    value: V | undefined,
   }
   : never;
 
@@ -28,35 +29,32 @@ type OptionalOfList<F extends ListTypeDef> = F extends ListTypeDef<infer E, infe
   }
   : never;
 
+type OptionalOfRecordField<
+  F extends RecordTypeDefField,
+> = F extends RecordTypeDefField<
+  infer V,
+  infer Readonly,
+  infer _Optional
+> ? RecordTypeDefField<OptionalOf<V>, Readonly, true>
+  : never;
+
 type OptionalOfRecord<F extends RecordTypeDefFields> = F extends RecordTypeDefFields<
-  infer MutableFields,
-  infer MutableOptionalFields,
-  infer ReadonlyFields,
-  infer ReadonlyOptionalFields
+  infer Fields
 > ? {
     readonly type: TypeDefType.Record,
-    readonly mutableFields: {},
-    readonly mutableOptionalFields: {
-      [K in keyof MutableFields]: OptionalOf<MutableFields[K]>;
-    } & {
-      [K in keyof MutableOptionalFields]: OptionalOf<MutableOptionalFields[K]>;
-    },
-    readonly readonlyFields: {},
-    readonly readonlyOptionalFields: {
-      [K in keyof ReadonlyFields]: OptionalOf<ReadonlyFields[K]>;
-    } & {
-      [K in keyof ReadonlyOptionalFields]: OptionalOf<ReadonlyOptionalFields[K]>;
+    readonly fields: {
+      [K in keyof Fields]: OptionalOfRecordField<Fields[K]>;
     },
   }
   : never;
 
-type OptionalOfDiscriminatedUnion<F extends DiscriminatedUnionTypeDef> = F extends DiscriminatedUnionTypeDef<
+type OptionalOfDiscriminatedUnion<F extends DiscriminatingUnionTypeDef> = F extends DiscriminatingUnionTypeDef<
   infer D,
   infer U
 > ? {
-    readonly type: TypeDefType.DiscriminatedUnion,
+    readonly type: TypeDefType.DiscriminatingUnion,
     readonly discriminator: D,
-    readonly options: {
+    readonly unions: {
       [K in keyof U]: U[K] extends RecordTypeDefFields ? OptionalOfRecord<U[K]>
         : never;
     },

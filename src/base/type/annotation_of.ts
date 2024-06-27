@@ -1,5 +1,5 @@
 import {
-  type DiscriminatedUnionTypeDef,
+  type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
   type RecordTypeDef,
@@ -12,7 +12,7 @@ import {
 export type AnnotationOf<F extends TypeDef, A> = F extends LiteralTypeDef ? AnnotationsOfLiteral<F, A>
   : F extends ListTypeDef ? AnnotationsOfList<F, A>
   : F extends RecordTypeDef ? AnnotationOfRecord<F, A>
-  : F extends DiscriminatedUnionTypeDef ? AnnotationOfDiscriminatedUnion<F, A>
+  : F extends DiscriminatingUnionTypeDef ? AnnotationOfDiscriminatingUnion<F, A>
   : never;
 
 type AnnotationsOfLiteral<F extends LiteralTypeDef, A> = F extends LiteralTypeDef ? A : never;
@@ -29,29 +29,18 @@ type AnnotationsOfList<
 type AnnotationOfRecord<
   F extends RecordTypeDefFields,
   A,
-> = F extends RecordTypeDefFields<
-  infer MutableFields,
-  infer MutableOptionalFields,
-  infer ReadonlyFields,
-  infer ReadonlyOptionalFields
-> ? {
+> = F extends RecordTypeDefFields<infer Fields> ? {
     children: {
-      readonly [K in keyof MutableFields]: AnnotationOf<MutableFields[K], A>;
-    } & {
-      readonly [K in keyof MutableOptionalFields]: AnnotationOf<MutableOptionalFields[K], A>;
-    } & {
-      readonly [K in keyof ReadonlyFields]: AnnotationOf<ReadonlyFields[K], A>;
-    } & {
-      readonly [K in keyof ReadonlyOptionalFields]: AnnotationOf<ReadonlyOptionalFields[K], A>;
+      readonly [K in keyof Fields]: AnnotationOf<Fields[K]['valueType'], A>;
     },
     annotation: A,
   }
   : never;
 
-type AnnotationOfDiscriminatedUnion<
-  F extends DiscriminatedUnionTypeDef,
+type AnnotationOfDiscriminatingUnion<
+  F extends DiscriminatingUnionTypeDef,
   A,
-> = F extends DiscriminatedUnionTypeDef<
+> = F extends DiscriminatingUnionTypeDef<
   infer D,
   infer U
 > ? {

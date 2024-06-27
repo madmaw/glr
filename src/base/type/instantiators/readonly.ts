@@ -18,7 +18,7 @@ export function instantiate<T extends TypeDef>(
       return null!;
     case TypeDefType.Record:
       return null!;
-    case TypeDefType.DiscriminatedUnion:
+    case TypeDefType.DiscriminatingUnion:
       return null!;
     default:
       throw new UnreachableError(def);
