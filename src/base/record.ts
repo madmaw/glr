@@ -28,6 +28,23 @@ export function rollup<
   }, records[0]) as R;
 }
 
+export function union<
+  R1 extends ReadonlyRecord<K1, V1>,
+  K1 extends string | number | symbol,
+  V1 extends R1[K1],
+  R2 extends ReadonlyRecord<K2, V2>,
+  K2 extends string | number | symbol,
+  V2 extends R2[K2],
+>(
+  r1: R1,
+  r2: R2,
+): R1 & R2 {
+  return {
+    ...r1,
+    ...r2,
+  };
+}
+
 export type Mutable<T> = {
   -readonly [K in keyof T]: T[K];
 };

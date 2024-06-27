@@ -19,6 +19,7 @@ export class RecordDescriptor<D extends Descriptors> implements Descriptor<Reado
   aMutable!: MutableOf<D>;
 
   aReadonly!: ReadonlyOf<D>;
+
   private readonly annotations: Record<keyof D, typeof observable>;
 
   constructor(readonly descriptors: D) {

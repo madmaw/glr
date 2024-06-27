@@ -1,32 +1,50 @@
-import { ListDescriptor } from 'base/descriptor/list';
 import {
-  LiteralDescriptor,
-  stringDescriptor,
-  unsignedIntegerDescriptor,
-} from 'base/descriptor/literal';
-import { RecordDescriptor } from 'base/descriptor/record';
+  field,
+  list,
+  literal,
+  numberBuilder,
+  record,
+  stringBuilder,
+} from 'base/type/builder';
 
 export type DocumentId = string;
 
 export type ImageId = string;
 
-export const documentIdDescriptor = new LiteralDescriptor<DocumentId>();
+const documentIdBuilder = literal<DocumentId>();
+export const documentIdTypeDef = documentIdBuilder.typeDef;
 
-export const channelDescriptor = new RecordDescriptor({
-  name: stringDescriptor,
+const channelBuilder = record()
+  .add(
+    'name',
+    field(stringBuilder),
+  )
   // a well-known type id that describes the data being encoded in this channel
-  type: unsignedIntegerDescriptor,
-});
+  .add(
+    'type',
+    field(numberBuilder),
+  );
+export const channelTypeDef = channelBuilder.typeDef;
+export type MutableChannel = typeof channelBuilder.aInstance;
+export type Channel = typeof channelBuilder.aReadonly;
 
-export type Channel = typeof channelDescriptor.aReadonly;
-export type MutableChannel = typeof channelDescriptor.aMutable;
-
-export const documentDescriptor = new RecordDescriptor({
-  id: documentIdDescriptor,
-  width: unsignedIntegerDescriptor,
-  height: unsignedIntegerDescriptor,
-  channels: new ListDescriptor(channelDescriptor),
-});
-
-export type Document = typeof documentDescriptor.aReadonly;
-export type MutableDocument = typeof documentDescriptor.aMutable;
+const documentBuilder = record()
+  .add(
+    'id',
+    field(documentIdBuilder).readonly(),
+  )
+  .add(
+    'width',
+    field(numberBuilder),
+  )
+  .add(
+    'height',
+    field(numberBuilder),
+  )
+  .add(
+    'channels',
+    field(list(channelBuilder)).readonly(),
+  );
+export const documentTypeDef = documentBuilder.typeDef;
+export type MutableDocument = typeof documentBuilder.aInstance;
+export type Document = typeof documentBuilder.aReadonly;

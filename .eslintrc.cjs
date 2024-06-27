@@ -215,7 +215,7 @@ module.exports = {
     // dprint should go last as it seems to cause race conditions with other rules. Suspect it runs
     // asynchronously where as eslint rules are synchronous
     'dprint-integration/dprint': [
-      'error',
+      'warn',
       {},
       {
         typescript: {
