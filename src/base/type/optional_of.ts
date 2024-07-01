@@ -38,13 +38,17 @@ type OptionalOfRecordField<
 > ? RecordTypeDefField<OptionalOf<V>, Readonly, true>
   : never;
 
-type OptionalOfRecord<F extends RecordTypeDefFields> = F extends RecordTypeDefFields<
+type OptionalOfRecordFields<
+  F extends RecordTypeDefFields,
+> = {
+  [K in keyof F]: OptionalOfRecordField<F[K]>;
+};
+
+type OptionalOfRecord<F extends RecordTypeDef> = F extends RecordTypeDef<
   infer Fields
 > ? {
     readonly type: TypeDefType.Record,
-    readonly fields: {
-      [K in keyof Fields]: OptionalOfRecordField<Fields[K]>;
-    },
+    readonly fields: OptionalOfRecordFields<Fields>,
   }
   : never;
 
@@ -55,7 +59,7 @@ type OptionalOfDiscriminatedUnion<F extends DiscriminatingUnionTypeDef> = F exte
     readonly type: TypeDefType.DiscriminatingUnion,
     readonly discriminator: D,
     readonly unions: {
-      [K in keyof U]: U[K] extends RecordTypeDefFields ? OptionalOfRecord<U[K]>
+      [K in keyof U]: U[K] extends RecordTypeDefFields ? OptionalOfRecordFields<U[K]>
         : never;
     },
   }

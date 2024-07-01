@@ -48,21 +48,14 @@ export type RecordTypeDefField<
   readonly optional: Optional,
 };
 
-export type RecordTypeDefFields<
-  // avoid circular ref by defaulting to `any`
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Fields extends ReadonlyRecord<RecordKey, RecordTypeDefField> = ReadonlyRecord<RecordKey, any>,
-> = {
-  readonly fields: Fields,
-};
+export type RecordTypeDefFields = ReadonlyRecord<RecordKey, RecordTypeDefField>;
 
 export type RecordTypeDef<
-  // avoid circular ref by defaulting to `any`
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Fields extends ReadonlyRecord<RecordKey, RecordTypeDefField> = ReadonlyRecord<RecordKey, any>,
+  Fields extends RecordTypeDefFields = RecordTypeDefFields,
 > = {
   readonly type: TypeDefType.Record,
-} & RecordTypeDefFields<Fields>;
+  readonly fields: Fields,
+};
 
 // discriminating union
 export type DiscriminatingUnionTypeDef<

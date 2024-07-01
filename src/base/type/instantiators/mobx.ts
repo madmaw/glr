@@ -4,6 +4,7 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type RecordKey,
+  type RecordTypeDef,
   type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
@@ -15,6 +16,7 @@ import {
   type TypeOfDiscriminatingUnion,
   type TypeOfList,
   type TypeOfRecord,
+  type TypeOfRecordFields,
 } from 'base/type/type_of';
 import { UnreachableError } from 'base/unreachable_error';
 import { observable } from 'mobx';
@@ -66,8 +68,38 @@ function instantiateList<T extends ListTypeDef<E>, E extends TypeDef>(
   });
 }
 
+function instantiateRecordFields<
+  Fields extends Record<RecordKey, RecordTypeDefField>,
+  Extra,
+>(
+  fields: Fields,
+  value: TypeOfRecordFields<Fields, {}>,
+  extra: Extra,
+): TypeOfRecordFields<Fields, Extra> {
+  const record = Object.entries(fields).reduce(function (acc, [
+    key,
+    field,
+  ]) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+    const fieldValue = (value as any)[key];
+    if (!field.optional || fieldValue !== undefined) {
+      acc[key] = instantiate(field.valueType, fieldValue);
+    }
+    return acc;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+  }, extra as Record<string, any>);
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return observable(
+    record,
+    undefined,
+    {
+      deep: false,
+    },
+  ) as TypeOfRecordFields<Fields, Extra>;
+}
+
 function instantiateRecord<
-  T extends RecordTypeDefFields<Fields>,
+  T extends RecordTypeDef<Fields>,
   Fields extends Record<RecordKey, RecordTypeDefField>,
   Extra,
 >(
@@ -81,6 +113,7 @@ function instantiateRecord<
     key,
     field,
   ]) {
+    return instantiateRecordFields(fields, value, extra);
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
     const fieldValue = (value as any)[key];
     if (!field.optional || fieldValue !== undefined) {
@@ -113,7 +146,7 @@ function instantiateDiscriminatingUnion<
   const discriminatorValue = value[discriminator];
   // record type only contains the current type of the discriminated union
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return instantiateRecord(
+  return instantiateRecordFields(
     unions[discriminatorValue],
     // incompatible types here
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any

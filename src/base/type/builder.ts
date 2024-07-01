@@ -8,6 +8,7 @@ import {
   type TypeDef,
   TypeDefType,
 } from './definition';
+import { type OptionalOf } from './optional_of';
 import { type ReadonlyOf } from './readonly_of';
 import { type TypeOf } from './type_of';
 
@@ -42,9 +43,23 @@ export function field<T extends TypeDef>(builder: TypeDefBuilder<T>): RecordFiel
 }
 
 class TypeDefBuilder<T extends TypeDef> {
+  /**
+   * Instance of the type of the built typedef. This value is never populated
+   * and should only be used as `typeof x.aInstance`
+   */
   readonly aInstance!: TypeOf<T>;
 
+  /**
+   * Instance of a readonly type of the built typedef. This value is never populated
+   * and should only be used as `typeof x.aReadonly`
+   */
   readonly aReadonly!: TypeOf<ReadonlyOf<T>>;
+
+  /**
+   * Instance of a type of the built typedef that has all optional fields. This value
+   * is never populated and should only be used as `typeof x.aOptional`
+   */
+  readonly aOptional!: TypeOf<OptionalOf<T>>;
 
   // TODO: other types (e.g. exploded, flattened, etc)?
 

@@ -1,9 +1,7 @@
-import { type ReadonlyRecord } from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
-  type RecordKey,
   type RecordTypeDef,
   type RecordTypeDefField,
   type RecordTypeDefFields,
@@ -22,44 +20,52 @@ type TypeOfLiteral<F extends LiteralTypeDef> = F['value'];
 export type TypeOfList<F extends ListTypeDef, Extra> = (F['readonly'] extends true ? readonly TypeOf<F['elements']>[]
   : TypeOf<F['elements']>[]) & (Extra);
 
-type MutableValueTypesOfFields<F extends ReadonlyRecord<RecordKey, RecordTypeDefField>> = {
+type MutableValueTypesOfFields<F extends RecordTypeDefFields> = {
   readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, false, false> ? K : never]: F[K]['valueType'];
 };
 
-type MutableOptionalValueTypesOfFields<F extends ReadonlyRecord<RecordKey, RecordTypeDefField>> = {
+type MutableOptionalValueTypesOfFields<F extends RecordTypeDefFields> = {
   readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, false, true> ? K : never]: F[K]['valueType'];
 };
 
-type ReadonlyValueTypesOfFields<F extends ReadonlyRecord<RecordKey, RecordTypeDefField>> = {
+type ReadonlyValueTypesOfFields<F extends RecordTypeDefFields> = {
   readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, true, false> ? K : never]: F[K]['valueType'];
 };
 
-type ReadonlyOptionalValueTypesOfFields<F extends ReadonlyRecord<RecordKey, RecordTypeDefField>> = {
+type ReadonlyOptionalValueTypesOfFields<F extends RecordTypeDefFields> = {
   readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, true, true> ? K : never]: F[K]['valueType'];
 };
 
-export type TypeOfRecord<F extends RecordTypeDefFields, Extra> = F extends RecordTypeDefFields<infer Fields> ?
+export type TypeOfRecord<
+  F extends RecordTypeDef,
+  Extra,
+> = TypeOfRecordFields<F['fields'], Extra>;
+
+export type TypeOfRecordFields<
+  F extends RecordTypeDefFields,
+  Extra,
+> = F extends RecordTypeDefFields ?
     & {
-      -readonly [K in keyof MutableValueTypesOfFields<Fields>]-?: TypeOf<
-        MutableValueTypesOfFields<Fields>[K],
+      -readonly [K in keyof MutableValueTypesOfFields<F>]-?: TypeOf<
+        MutableValueTypesOfFields<F>[K],
         Extra
       >;
     }
     & {
-      -readonly [K in keyof MutableOptionalValueTypesOfFields<Fields>]?: TypeOf<
-        MutableOptionalValueTypesOfFields<Fields>[K],
+      -readonly [K in keyof MutableOptionalValueTypesOfFields<F>]?: TypeOf<
+        MutableOptionalValueTypesOfFields<F>[K],
         Extra
       >;
     }
     & {
-      readonly [K in keyof ReadonlyValueTypesOfFields<Fields>]-?: TypeOf<
-        ReadonlyValueTypesOfFields<Fields>[K],
+      readonly [K in keyof ReadonlyValueTypesOfFields<F>]-?: TypeOf<
+        ReadonlyValueTypesOfFields<F>[K],
         Extra
       >;
     }
     & {
-      readonly [K in keyof ReadonlyOptionalValueTypesOfFields<Fields>]?: TypeOf<
-        ReadonlyOptionalValueTypesOfFields<Fields>[K],
+      readonly [K in keyof ReadonlyOptionalValueTypesOfFields<F>]?: TypeOf<
+        ReadonlyOptionalValueTypesOfFields<F>[K],
         Extra
       >;
     }
@@ -70,7 +76,7 @@ export type TypeOfDiscriminatingUnion<
   F extends DiscriminatingUnionTypeDef,
   Extra,
 > = F extends DiscriminatingUnionTypeDef<infer D, infer U> ? {
-    [K in keyof U]: TypeOfRecord<U[K], Extra> & {
+    [K in keyof U]: TypeOfRecordFields<U[K], Extra> & {
       [V in D]: K;
     };
   }[keyof U] & Extra
@@ -128,8 +134,8 @@ const d = {
   type: TypeDefType.DiscriminatingUnion,
   discriminator: 'x',
   unions: {
-    [1]: r,
-    [2]: r2,
+    [1]: r.fields,
+    [2]: r2.fields,
   },
 } as const;
 

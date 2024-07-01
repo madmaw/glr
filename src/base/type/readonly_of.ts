@@ -37,13 +37,13 @@ type ReadonlyOfRecordField<
 > ? RecordTypeDefField<ReadonlyOf<V>, true, Optional>
   : never;
 
-type ReadonlyOfRecord<F extends RecordTypeDefFields> = F extends RecordTypeDefFields<
-  infer Fields
-> ? {
-    readonly type: TypeDefType.Record,
-    readonly fields: {
-      [K in keyof Fields]: ReadonlyOfRecordField<Fields[K]>;
-    },
+type ReadonlyOfRecordFields<F extends RecordTypeDefFields> = {
+  [K in keyof F]: ReadonlyOfRecordField<F[K]>;
+};
+
+type ReadonlyOfRecord<F extends RecordTypeDef> = F extends RecordTypeDef<infer Fields> ? {
+    type: TypeDefType.Record,
+    fields: ReadonlyOfRecordFields<Fields>,
   }
   : never;
 
@@ -53,7 +53,7 @@ type ReadonlyOfDiscriminatedUnion<
     readonly type: TypeDefType.DiscriminatingUnion,
     readonly discriminator: D,
     readonly unions: {
-      [K in keyof U]: U[K] extends RecordTypeDefFields ? ReadonlyOfRecord<U[K]>
+      [K in keyof U]: U[K] extends RecordTypeDefFields ? ReadonlyOfRecordFields<U[K]>
         : never;
     },
   }

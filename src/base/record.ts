@@ -1,3 +1,5 @@
+import { type RecordKey } from './type/definition';
+
 export function reverse<
   Key extends string | number | symbol,
   Value extends string | number | symbol,
@@ -43,6 +45,52 @@ export function union<
     ...r1,
     ...r2,
   };
+}
+
+export function map<
+  K extends RecordKey,
+  V,
+  R,
+>(
+  r: ReadonlyRecord<K, V>,
+  f: (k: K, v: V) => R,
+): Record<K, R> {
+  // TODO can use reduce to implement map
+  return Object.entries<V>(r).reduce(
+    function (acc, [
+      k,
+      v,
+    ]) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const typedKey = k as K;
+      acc[typedKey] = f(typedKey, v);
+      return acc;
+    },
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    {} as Record<K, R>,
+  );
+}
+
+export function reduce<
+  K extends RecordKey,
+  V,
+  A,
+>(
+  r: ReadonlyRecord<K, V>,
+  f: (acc: A, K: K, v: V) => A,
+  a: A,
+): A {
+  return Object.entries<V>(r).reduce(
+    function (acc, [
+      k,
+      v,
+    ]) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const typedKey = k as K;
+      return f(acc, typedKey, v);
+    },
+    a,
+  );
 }
 
 export type Mutable<T> = {

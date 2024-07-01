@@ -1,5 +1,9 @@
 import { type UnionToIntersection } from 'base/lang';
-import { type ReadonlyRecord } from 'base/record';
+import {
+  type ReadonlyRecord,
+  reduce,
+} from 'base/record';
+import { UnreachableError } from 'base/unreachable_error';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
@@ -51,14 +55,16 @@ type FlattenedOfRecordFieldGroup<
     >;
   }[keyof Fields]>;
 
-type FlattenedOfRecord<
+type FlattenedOfRecordFields<
   F extends RecordTypeDefFields,
   Prefix extends string,
-> = F extends RecordTypeDefFields<infer Fields> ?
-    & FlattenedOfRecordFieldGroup<Fields, Prefix>
-    // include self
-    & ReadonlyRecord<Prefix, F>
+> = F extends RecordTypeDefFields ? FlattenedOfRecordFieldGroup<F, Prefix>
   : never;
+
+type FlattenedOfRecord<
+  F extends RecordTypeDef,
+  Prefix extends string,
+> = FlattenedOfRecordFields<F['fields'], Prefix> & ReadonlyRecord<Prefix, F>;
 
 type FlattenedOfDiscriminatingUnion<
   F extends DiscriminatingUnionTypeDef,
@@ -67,10 +73,13 @@ type FlattenedOfDiscriminatingUnion<
   // combine all the possible unions (we don't/can't discriminate on the paths)
   ?
     & {
-      readonly [K in keyof U]: FlattenedOfRecord<
-        U[K],
-        PrefixOf<Prefix, K>
-      >;
+      readonly [K in keyof U]:
+        & FlattenedOfRecordFields<
+          U[K],
+          PrefixOf<Prefix, K>
+        >
+        // synthesize a type for PrefixOf<Prefix, K>
+        & ReadonlyRecord<PrefixOf<Prefix, K>, RecordTypeDef<U[K]>>;
     }[keyof U]
     // include the discriminator
     & {
@@ -79,6 +88,106 @@ type FlattenedOfDiscriminatingUnion<
     // include self
     & ReadonlyRecord<Prefix, F>
   : never;
+
+function prefixOf(prefix: string, postfix: string | number) {
+  return prefix === '' ? `${postfix}` : `${prefix}.${postfix}`;
+}
+
+export function flatten<T extends TypeDef, Prefix extends string = ''>(
+  t: T,
+  prefix: Prefix,
+): FlattenedOf<T, Prefix> {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return flattenInternal(t, prefix) as FlattenedOf<T, Prefix>;
+}
+
+function flattenInternal(t: TypeDef, prefix: string): Record<string, TypeDef> {
+  switch (t.type) {
+    case TypeDefType.Literal:
+      return flattenLiteral(t, prefix);
+    case TypeDefType.List:
+      return flattenList(t, prefix);
+    case TypeDefType.Record:
+      return flattenRecord(t, prefix);
+    case TypeDefType.DiscriminatingUnion:
+      return flattenDiscriminatingUnion(t, prefix);
+    default:
+      throw new UnreachableError(t);
+  }
+}
+
+function flattenLiteral(
+  t: LiteralTypeDef,
+  prefix: string,
+): Record<string, TypeDef> {
+  return {
+    [prefix]: t,
+  };
+}
+
+function flattenList(
+  t: ListTypeDef,
+  prefix: string,
+): Record<string, TypeDef> {
+  return {
+    ...flattenInternal(t.elements, prefixOf(prefix, '0')),
+    [prefix]: t,
+  };
+}
+
+function flattenRecord(
+  t: RecordTypeDef,
+  prefix: string,
+): Record<string, TypeDef> {
+  return {
+    ...flattenRecordFields(t.fields, prefix),
+    [prefix]: t,
+  };
+}
+
+function flattenDiscriminatingUnion(
+  t: DiscriminatingUnionTypeDef,
+  prefix: string,
+): Record<string, TypeDef> {
+  return reduce<string, RecordTypeDefFields, Record<string, TypeDef>>(
+    t.unions,
+    function (acc, k, fields) {
+      const key = prefixOf(prefix, k);
+      return {
+        ...flattenRecordFields(fields, key),
+        [key]: {
+          type: TypeDefType.Record,
+          fields,
+        },
+        ...acc,
+      };
+    },
+    {
+      [prefixOf(prefix, t.discriminator)]: {
+        type: TypeDefType.Literal,
+        value: undefined,
+      },
+      [prefix]: t,
+    },
+  );
+}
+
+function flattenRecordFields(
+  t: RecordTypeDefFields,
+  prefix: string,
+): Record<string, TypeDef> {
+  return reduce(
+    t,
+    function (acc, k, field) {
+      const flattenedField = flattenInternal(field.valueType, prefixOf(prefix, k));
+      return {
+        ...acc,
+        ...flattenedField,
+      };
+    },
+    {},
+  );
+}
 
 const n: LiteralTypeDef<1 | 3 | 5> = {
   type: TypeDefType.Literal,
@@ -132,7 +241,7 @@ const d = {
   type: TypeDefType.DiscriminatingUnion,
   discriminator: 'x',
   unions: {
-    a: r2,
+    a: r2.fields,
   },
 } as const;
 
@@ -168,6 +277,7 @@ const di: FlattenedOf<typeof d, 'di'>['di.x'] = {
   value: 'a',
 };
 const dp: (keyof FlattenedOf<typeof d, 'di'>)[] = [
-  'di.a.r',
+  'di',
   'di.x',
+  'di.a.r',
 ];
