@@ -1,4 +1,3 @@
-import { type MobxObservable } from 'base/mobx';
 import {
   type ReadonlyRecord,
   reduce,
@@ -14,7 +13,12 @@ import {
   type TypeDef,
   TypeDefType,
 } from 'base/type/definition';
-import { type ReadonlyOf } from 'base/type/readonly_of';
+import {
+  type ReadonlyOf,
+  type ReadonlyOfDiscriminatingUnion,
+  type ReadonlyOfList,
+  type ReadonlyOfRecord,
+} from 'base/type/readonly_of';
 import {
   type ValueTypeOf,
   type ValueTypeOfDiscriminatingUnion,
@@ -23,57 +27,48 @@ import {
   type ValueTypeOfRecordFields,
 } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
-import { observable } from 'mobx';
 
-/**
- * Creates a mobx observable copy of the supplied value
- * @param def description of the object to create
- * @param value the value to populate the object from
- * @returns the observable copy of the supplied value
- */
-function instantiate<T extends TypeDef>(
+// creates an immutable copy of the supplied value
+function instantiate<T extends ReadonlyOf<TypeDef>>(
   def: T,
-  value: ValueTypeOf<ReadonlyOf<T>>,
-): ValueTypeOf<MobxObservable<T>> {
+  value: ValueTypeOf<T>,
+): ValueTypeOf<T> {
   switch (def.type) {
     case TypeDefType.Literal:
       return instantiateLiteral(def, value);
     case TypeDefType.List:
       // defaults to any type because we cannot supply the element type here
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return instantiateList(def, value) as ValueTypeOf<MobxObservable<T>>;
+      return instantiateList(def, value) as ValueTypeOf<T>;
     case TypeDefType.Record:
-      // defaults to any type because we cannot supply the field types here
+      // defaults to any type because we cannot supply the element type here
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return instantiateRecord(def, value) as ValueTypeOf<MobxObservable<T>>;
+      return instantiateRecord(def, value) as ValueTypeOf<T>;
     case TypeDefType.DiscriminatingUnion:
-      // defaults to any type because we cannot supply the field types here
+      // defaults to any type because we cannot supply the element type here
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return instantiateDiscriminatingUnion(def, value) as ValueTypeOf<MobxObservable<T>>;
+      return instantiateDiscriminatingUnion(def, value) as ValueTypeOf<T>;
     default:
       throw new UnreachableError(def);
   }
 }
 
-function instantiateLiteral<V>(_def: LiteralTypeDef<V>, value: V): V {
-  return value;
+function instantiateLiteral<V>(_def: ReadonlyOf<LiteralTypeDef<V>>, v: V): ValueTypeOf<LiteralTypeDef<V>> {
+  return v;
 }
 
-function instantiateList<T extends ListTypeDef<E>, E extends TypeDef>(
+function instantiateList<T extends ReadonlyOfList<ListTypeDef<E>>, E extends TypeDef>(
   {
     elements,
   }: T,
-  arr: ValueTypeOf<ReadonlyOf<T>>,
+  arr: ValueTypeOf<T>,
 ): ValueTypeOfList<T, {}> {
-  const observables = arr.map(function (value) {
+  // for some reason, even though `readonly` is always true here, the type inference doesn't
+  // pick up that only a `readonly` array, like the one returned by freeze, can be returned
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return Object.freeze(arr.map(function (value) {
     return instantiate(elements, value);
-  });
-  return observable.array(
-    observables,
-    {
-      deep: false,
-    },
-  );
+  })) as ValueTypeOfList<T, {}>;
 }
 
 function instantiateRecordFields<
@@ -94,17 +89,11 @@ function instantiateRecordFields<
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
   }, extra as Record<string, any>);
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return observable(
-    record,
-    undefined,
-    {
-      deep: false,
-    },
-  ) as ValueTypeOfRecordFields<Fields, Extra>;
+  return Object.freeze(record) as ValueTypeOfRecordFields<Fields, Extra>;
 }
 
 function instantiateRecord<
-  T extends RecordTypeDef<Fields>,
+  T extends ReadonlyOfRecord<RecordTypeDef<Fields>>,
   Fields extends ReadonlyRecord<RecordKey, RecordTypeDefField>,
 >(
   {
@@ -112,19 +101,12 @@ function instantiateRecord<
   }: T,
   value: ValueTypeOfRecord<T, {}>,
 ): ValueTypeOfRecord<T, {}> {
-  const record = instantiateRecordFields(fields, value, {});
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return observable(
-    record,
-    undefined,
-    {
-      deep: false,
-    },
-  ) as ValueTypeOfRecord<T, {}>;
+  return instantiateRecordFields(fields, value, {}) as ValueTypeOfRecord<T, {}>;
 }
 
 function instantiateDiscriminatingUnion<
-  T extends DiscriminatingUnionTypeDef<D, U>,
+  T extends ReadonlyOfDiscriminatingUnion<DiscriminatingUnionTypeDef<D, U>>,
   D extends string,
   U extends ReadonlyRecord<RecordKey, RecordTypeDefFields>,
 >(
@@ -135,7 +117,9 @@ function instantiateDiscriminatingUnion<
   value: ValueTypeOfDiscriminatingUnion<T, {}>,
 ): ValueTypeOfDiscriminatingUnion<T, {}> {
   const discriminatorValue = value[discriminator];
-  const record = instantiateRecordFields(
+  // record type only contains the current type of the discriminated union
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return instantiateRecordFields(
     unions[discriminatorValue],
     // incompatible types here
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
@@ -149,73 +133,7 @@ function instantiateDiscriminatingUnion<
     } as unknown as {
       [K in D]: keyof U;
     },
-  );
-
-  // record type only contains the current type of the discriminated union
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return observable(
-    record,
-    undefined,
-    {
-      deep: false,
-    },
   ) as unknown as ValueTypeOfDiscriminatingUnion<T, {}>;
 }
 
-export const instantiateMobxObservable = instantiate;
-
-const n: LiteralTypeDef<1 | 3 | 5> = {
-  type: TypeDefType.Literal,
-  value: undefined!,
-};
-
-const a: ListTypeDef<typeof n, true> = {
-  type: TypeDefType.List,
-  elements: n,
-  readonly: true,
-};
-
-const c = {
-  type: TypeDefType.Record,
-  mutableFields: {},
-  mutableOptionalFields: {
-    m: n,
-  },
-  readonlyFields: {},
-  readonlyOptionalFields: {},
-} as const;
-
-const r = {
-  type: TypeDefType.Record,
-  fields: {
-    m: {
-      valueType: n,
-      readonly: false,
-      optional: false,
-    },
-    om: {
-      valueType: a,
-      readonly: false,
-      optional: true,
-    },
-    r: {
-      valueType: n,
-      readonly: true,
-      optional: false,
-    },
-    or: {
-      valueType: n,
-      readonly: true,
-      optional: true,
-    },
-  },
-} as const;
-
-const ri: ValueTypeOf<typeof r> = {
-  m: 1,
-  om: [3],
-  r: 1,
-  or: 3,
-};
-
-const robs = instantiate(r, ri);
+export const instantiateFrozen = instantiate;

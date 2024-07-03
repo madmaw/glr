@@ -24,8 +24,8 @@ const channelBuilder = record()
     field(numberBuilder),
   );
 export const channelTypeDef = channelBuilder.typeDef;
-export type MutableChannel = typeof channelBuilder.aInstance;
-export type Channel = typeof channelBuilder.aReadonly;
+export type MutableChannel = typeof channelBuilder.aValue;
+export type Channel = typeof channelBuilder.readonlyOf.aValue;
 
 const documentBuilder = record()
   .add(
@@ -45,5 +45,5 @@ const documentBuilder = record()
     field(list(channelBuilder)).readonly(),
   );
 export const documentTypeDef = documentBuilder.typeDef;
-export type MutableDocument = typeof documentBuilder.aInstance;
-export type Document = typeof documentBuilder.aReadonly;
+export type MutableDocument = typeof documentBuilder.aValue;
+export type Document = typeof documentBuilder.readonlyOf.aValue;

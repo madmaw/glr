@@ -8,9 +8,15 @@ import {
   type TypeDef,
   TypeDefType,
 } from './definition';
-import { type OptionalOf } from './optional_of';
-import { type ReadonlyOf } from './readonly_of';
-import { type TypeOf } from './type_of';
+import {
+  type OptionalOf,
+  optionalOf,
+} from './optional_of';
+import {
+  type ReadonlyOf,
+  readonlyOf,
+} from './readonly_of';
+import { type ValueTypeOf } from './value_type_of';
 
 export function literal<T>(): LiteralTypeDefBuilder<T> {
   return new LiteralTypeDefBuilder({
@@ -47,21 +53,15 @@ class TypeDefBuilder<T extends TypeDef> {
    * Instance of the type of the built typedef. This value is never populated
    * and should only be used as `typeof x.aInstance`
    */
-  readonly aInstance!: TypeOf<T>;
+  readonly aValue!: ValueTypeOf<T>;
 
-  /**
-   * Instance of a readonly type of the built typedef. This value is never populated
-   * and should only be used as `typeof x.aReadonly`
-   */
-  readonly aReadonly!: TypeOf<ReadonlyOf<T>>;
+  get readonlyOf(): TypeDefBuilder<ReadonlyOf<T>> {
+    return new TypeDefBuilder(readonlyOf(this.typeDef));
+  }
 
-  /**
-   * Instance of a type of the built typedef that has all optional fields. This value
-   * is never populated and should only be used as `typeof x.aOptional`
-   */
-  readonly aOptional!: TypeOf<OptionalOf<T>>;
-
-  // TODO: other types (e.g. exploded, flattened, etc)?
+  get optionalOf(): TypeDefBuilder<OptionalOf<T>> {
+    return new TypeDefBuilder(optionalOf(this.typeDef));
+  }
 
   constructor(readonly typeDef: T) {
   }

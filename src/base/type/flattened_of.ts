@@ -93,30 +93,30 @@ function prefixOf(prefix: string, postfix: string | number) {
   return prefix === '' ? `${postfix}` : `${prefix}.${postfix}`;
 }
 
-export function flatten<T extends TypeDef, Prefix extends string = ''>(
+export function flattenedOf<T extends TypeDef, Prefix extends string = ''>(
   t: T,
   prefix: Prefix,
 ): FlattenedOf<T, Prefix> {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return flattenInternal(t, prefix) as FlattenedOf<T, Prefix>;
+  return flattenedOfInternal(t, prefix) as FlattenedOf<T, Prefix>;
 }
 
-function flattenInternal(t: TypeDef, prefix: string): Record<string, TypeDef> {
+function flattenedOfInternal(t: TypeDef, prefix: string): Record<string, TypeDef> {
   switch (t.type) {
     case TypeDefType.Literal:
-      return flattenLiteral(t, prefix);
+      return flattenedOfLiteral(t, prefix);
     case TypeDefType.List:
-      return flattenList(t, prefix);
+      return flattenedOfList(t, prefix);
     case TypeDefType.Record:
-      return flattenRecord(t, prefix);
+      return flattenedOfRecord(t, prefix);
     case TypeDefType.DiscriminatingUnion:
-      return flattenDiscriminatingUnion(t, prefix);
+      return flattenedOfDiscriminatingUnion(t, prefix);
     default:
       throw new UnreachableError(t);
   }
 }
 
-function flattenLiteral(
+function flattenedOfLiteral(
   t: LiteralTypeDef,
   prefix: string,
 ): Record<string, TypeDef> {
@@ -125,27 +125,27 @@ function flattenLiteral(
   };
 }
 
-function flattenList(
+function flattenedOfList(
   t: ListTypeDef,
   prefix: string,
 ): Record<string, TypeDef> {
   return {
-    ...flattenInternal(t.elements, prefixOf(prefix, '0')),
+    ...flattenedOfInternal(t.elements, prefixOf(prefix, '0')),
     [prefix]: t,
   };
 }
 
-function flattenRecord(
+function flattenedOfRecord(
   t: RecordTypeDef,
   prefix: string,
 ): Record<string, TypeDef> {
   return {
-    ...flattenRecordFields(t.fields, prefix),
+    ...flattenedOfRecordFields(t.fields, prefix),
     [prefix]: t,
   };
 }
 
-function flattenDiscriminatingUnion(
+function flattenedOfDiscriminatingUnion(
   t: DiscriminatingUnionTypeDef,
   prefix: string,
 ): Record<string, TypeDef> {
@@ -154,7 +154,7 @@ function flattenDiscriminatingUnion(
     function (acc, k, fields) {
       const key = prefixOf(prefix, k);
       return {
-        ...flattenRecordFields(fields, key),
+        ...flattenedOfRecordFields(fields, key),
         [key]: {
           type: TypeDefType.Record,
           fields,
@@ -172,14 +172,14 @@ function flattenDiscriminatingUnion(
   );
 }
 
-function flattenRecordFields(
+function flattenedOfRecordFields(
   t: RecordTypeDefFields,
   prefix: string,
 ): Record<string, TypeDef> {
   return reduce(
     t,
     function (acc, k, field) {
-      const flattenedField = flattenInternal(field.valueType, prefixOf(prefix, k));
+      const flattenedField = flattenedOfInternal(field.valueType, prefixOf(prefix, k));
       return {
         ...acc,
         ...flattenedField,
@@ -188,96 +188,3 @@ function flattenRecordFields(
     {},
   );
 }
-
-const n: LiteralTypeDef<1 | 3 | 5> = {
-  type: TypeDefType.Literal,
-  value: undefined!,
-};
-
-const a: ListTypeDef<typeof n, true> = {
-  type: TypeDefType.List,
-  elements: n,
-  readonly: true,
-};
-
-const r = {
-  type: TypeDefType.Record,
-  fields: {
-    m: {
-      valueType: n,
-      readonly: false,
-      optional: false,
-    },
-    om: {
-      valueType: a,
-      readonly: false,
-      optional: true,
-    },
-    r: {
-      valueType: n,
-      readonly: true,
-      optional: false,
-    },
-    or: {
-      valueType: n,
-      readonly: true,
-      optional: true,
-    },
-  },
-} as const;
-
-const r2 = {
-  type: TypeDefType.Record,
-  fields: {
-    r: {
-      valueType: n,
-      readonly: false,
-      optional: false,
-    },
-  },
-} as const;
-
-const d = {
-  type: TypeDefType.DiscriminatingUnion,
-  discriminator: 'x',
-  unions: {
-    a: r2.fields,
-  },
-} as const;
-
-const ni: FlattenedOf<typeof n, 'ni'> = {
-  ni: n,
-};
-
-const ai: FlattenedOf<typeof a, 'ai'> = {
-  ai: a,
-  'ai.0': n,
-  'ai.1': n,
-  // 'ax': n,
-};
-const ap: (keyof FlattenedOf<typeof a, 'ai'>)[] = [
-  'ai',
-  'ai.0',
-];
-
-const ri: FlattenedOf<typeof r, 'ri'>['ri.om'] = a;
-const rp: (keyof FlattenedOf<typeof r, 'rp'>)[] = [
-  'rp.m',
-  'rp.om',
-  'rp.om.0',
-];
-
-const ri2: FlattenedOfRecord<typeof r2, 'r2'> = {
-  r2: r2,
-  'r2.r': n,
-};
-
-const di: FlattenedOf<typeof d, 'di'>['di.x'] = {
-  type: TypeDefType.Literal,
-  value: 'a',
-};
-const dp: (keyof FlattenedOf<typeof d, 'di'>)[] = [
-  'di',
-  'di.x',
-  'di.a.r',
-];

@@ -58,6 +58,7 @@ export type RecordTypeDef<
 };
 
 // discriminating union
+
 export type DiscriminatingUnionTypeDef<
   D extends string = string,
   U extends ReadonlyRecord<RecordKey, RecordTypeDefFields> = ReadonlyRecord<RecordKey, RecordTypeDefFields>,

@@ -1,5 +1,3 @@
-import { type RecordKey } from './type/definition';
-
 export function reverse<
   Key extends string | number | symbol,
   Value extends string | number | symbol,
@@ -48,7 +46,7 @@ export function union<
 }
 
 export function map<
-  K extends RecordKey,
+  K extends string | number | symbol,
   V,
   R,
 >(
@@ -72,7 +70,7 @@ export function map<
 }
 
 export function reduce<
-  K extends RecordKey,
+  K extends string | number | symbol,
   V,
   A,
 >(

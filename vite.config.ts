@@ -11,7 +11,7 @@ export default defineConfig(function (env: ConfigEnv) {
   return {
     base: '',
     test: {
-      include: ['src/**/tests/*.test.ts*'],
+      include: ['src/**/test/*.test.ts*'],
       globals: true,
       environment: 'jsdom',
     },
