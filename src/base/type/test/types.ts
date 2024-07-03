@@ -73,7 +73,7 @@ export const discriminatingUnionTypeDef: DiscriminatingUnionTypeDef<'disc', {
   },
 };
 
-export const discriminatingUnionDiscriminatorTypeDef: LiteralTypeDef<'a'> = {
+export const discriminatingUnionDiscriminatorTypeDef: LiteralTypeDef<'a' | 'b'> = {
   type: TypeDefType.Literal,
   value: undefined!,
 };

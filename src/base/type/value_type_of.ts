@@ -6,7 +6,6 @@ import {
   type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
-  TypeDefType,
 } from './definition';
 
 export type ValueTypeOf<F extends TypeDef, Extra = {}> = F extends LiteralTypeDef ? TypeOfLiteral<F>
@@ -83,82 +82,3 @@ export type ValueTypeOfDiscriminatingUnion<
     };
   }[keyof U] & Extra
   : never;
-
-const n: LiteralTypeDef<1 | 3 | 5> = {
-  type: TypeDefType.Literal,
-  value: undefined!,
-};
-
-const a: ListTypeDef<typeof n, true> = {
-  type: TypeDefType.List,
-  elements: n,
-  readonly: true,
-};
-
-const r = {
-  type: TypeDefType.Record,
-  fields: {
-    m: {
-      valueType: n,
-      readonly: false,
-      optional: false,
-    },
-    om: {
-      valueType: a,
-      readonly: false,
-      optional: true,
-    },
-    r: {
-      valueType: n,
-      readonly: true,
-      optional: false,
-    },
-    or: {
-      valueType: n,
-      readonly: true,
-      optional: true,
-    },
-  },
-} as const;
-
-const r2 = {
-  type: TypeDefType.Record,
-  fields: {
-    r: {
-      valueType: n,
-      readonly: false,
-      optional: false,
-    },
-  },
-} as const;
-
-const d = {
-  type: TypeDefType.DiscriminatingUnion,
-  discriminator: 'x',
-  unions: {
-    [1]: r.fields,
-    [2]: r2.fields,
-  },
-} as const;
-
-const ni: ValueTypeOf<typeof n> = 1;
-
-const ai: ValueTypeOf<typeof a> = [
-  1,
-  1,
-  1,
-  5,
-];
-
-const ri: ValueTypeOf<typeof r> = {
-  m: 1,
-  om: [3],
-  r: 1,
-  or: 5,
-};
-ri.m = 3;
-
-const di: ValueTypeOf<typeof d> = {
-  x: 2,
-  r: 1,
-};
