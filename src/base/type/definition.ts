@@ -33,6 +33,7 @@ export type ListTypeDef<E extends TypeDef = any, Readonly extends boolean = bool
 };
 
 // record
+// TODO rename to `struct` and have `record` being just a map of arbitrary keys to a single value type
 
 export type RecordKey = string | number;
 

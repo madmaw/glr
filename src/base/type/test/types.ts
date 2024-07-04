@@ -24,20 +24,20 @@ export const listTypeDef: ListTypeDef<typeof literalNumericTypeDef> = {
 };
 
 export const recordTypeDef: RecordTypeDef<{
-  literal: RecordTypeDefField<typeof literalNumericTypeDef, false, false>,
-  list: RecordTypeDefField<typeof listTypeDef, false, false>,
+  literal: RecordTypeDefField<typeof literalNumericTypeDef, false, true>,
+  list: RecordTypeDefField<typeof listTypeDef, false, true>,
 }> = {
   type: TypeDefType.Record,
   fields: {
     literal: {
       valueType: literalNumericTypeDef,
       readonly: false,
-      optional: false,
+      optional: true,
     },
     list: {
       valueType: listTypeDef,
       readonly: false,
-      optional: false,
+      optional: true,
     },
   },
 };

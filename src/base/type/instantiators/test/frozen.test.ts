@@ -51,7 +51,7 @@ describe('freeze', function () {
   describe('record', function () {
     let record: ValueTypeOf<ReadonlyOf<typeof recordTypeDef>>;
     const input: ValueTypeOf<typeof recordTypeDef> = {
-      list: [],
+      list: undefined,
       literal: 1,
     };
 

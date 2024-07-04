@@ -169,7 +169,7 @@ describe('mobx', function () {
     });
 
     describe('observing direct changes', function () {
-      let literalField: number;
+      let literalField: number | undefined;
       let disposer: IReactionDisposer | undefined;
 
       beforeEach(function () {
@@ -177,7 +177,7 @@ describe('mobx', function () {
           function () {
             return record.literal;
           },
-          function (newLiteral: number) {
+          function (newLiteral: number | undefined) {
             literalField = newLiteral;
           },
           {
@@ -211,15 +211,15 @@ describe('mobx', function () {
     });
 
     describe('observing indirect changes', function () {
-      let listFieldLength: number;
+      let listFieldLength: number | undefined;
       let disposer: IReactionDisposer | undefined;
 
       beforeEach(function () {
         disposer = reaction(
           function () {
-            return record.list.length;
+            return record.list?.length;
           },
-          function (newLength: number) {
+          function (newLength: number | undefined) {
             listFieldLength = newLength;
           },
           {
@@ -228,7 +228,7 @@ describe('mobx', function () {
         );
         expect(listFieldLength).toBe(3);
         runInAction(function () {
-          record.list.push(4);
+          record.list?.push(4);
         });
       });
 
@@ -293,7 +293,7 @@ describe('mobx', function () {
         disposer = reaction(
           function () {
             return discriminatingUnion.disc === 'a'
-              ? discriminatingUnion.list.length
+              ? discriminatingUnion.list?.length
               : undefined;
           },
           function (newValue: number | undefined) {
@@ -306,7 +306,7 @@ describe('mobx', function () {
         expect(value).toBe(0);
         runInAction(function () {
           expectEquals(discriminatingUnion.disc, 'a');
-          discriminatingUnion.list.push(1);
+          discriminatingUnion.list?.push(1);
         });
       });
 

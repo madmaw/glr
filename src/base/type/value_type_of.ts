@@ -78,7 +78,7 @@ export type ValueTypeOfDiscriminatingUnion<
   Extra,
 > = F extends DiscriminatingUnionTypeDef<infer D, infer U> ? {
     [K in keyof U]: ValueTypeOfRecordFields<U[K], Extra> & {
-      [V in D]: K;
+      readonly [V in D]: K;
     };
   }[keyof U] & Extra
   : never;

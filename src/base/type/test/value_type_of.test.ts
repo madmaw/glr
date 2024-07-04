@@ -6,7 +6,7 @@ import {
   type recordTypeDef,
 } from './types';
 
-// we are just testing this file compiles, as we are just producing types there is no code for the tests
+// We are just testing this file compiles. As we are just producing types there is no code for the tests
 // to execute
 describe('ValueTypeOf', function () {
   describe('literal', function () {
@@ -36,8 +36,8 @@ describe('ValueTypeOf', function () {
   describe('record', function () {
     it('has the expected shape', function () {
       let expected: {
-        list: number[],
-        literal: number,
+        list?: number[],
+        literal?: number,
       } = {
         list: [
           1,
@@ -56,9 +56,9 @@ describe('ValueTypeOf', function () {
   describe('discriminating union', function () {
     it('has the expected shape for discriminator a', function () {
       let expected: {
-        disc: 'a',
-        list: number[],
-        literal: number,
+        readonly disc: 'a',
+        list?: number[],
+        literal?: number,
       } = {
         disc: 'a',
         list: [
@@ -70,15 +70,17 @@ describe('ValueTypeOf', function () {
       };
       const t: ValueTypeOf<typeof discriminatingUnionTypeDef> = expected;
       // test assignment in both directions
+      // unfortunately typescript allows records with readonly fields to be assigned to
+      // variables of the otherwise same type with mutable fields
       expected = t;
       expect(t).toBeDefined();
     });
 
     it('has the expected shape for discriminator b', function () {
       let expected: {
-        disc: 'b',
-        x: number,
-        y: number,
+        readonly disc: 'b',
+        readonly x: number,
+        readonly y: number,
       } = {
         disc: 'b',
         x: 1,

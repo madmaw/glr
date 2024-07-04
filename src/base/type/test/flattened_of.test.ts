@@ -156,7 +156,7 @@ describe('flattenedOf', function () {
     const flattened = flattenedOf(listTypeDef, 'l');
     expect(flattened).toEqual({
       l: listTypeDef,
-      'l.0': literalNumericTypeDef,
+      'l.n': literalNumericTypeDef,
     });
   });
 
@@ -166,7 +166,7 @@ describe('flattenedOf', function () {
       r: recordTypeDef,
       'r.literal': literalNumericTypeDef,
       'r.list': listTypeDef,
-      'r.list.0': literalNumericTypeDef,
+      'r.list.n': literalNumericTypeDef,
     });
   });
 
@@ -177,7 +177,7 @@ describe('flattenedOf', function () {
       'd.disc': discriminatingUnionDiscriminatorTypeDef,
       'd.a': recordTypeDef,
       'd.a.list': listTypeDef,
-      'd.a.list.0': literalNumericTypeDef,
+      'd.a.list.n': literalNumericTypeDef,
       'd.a.literal': literalNumericTypeDef,
       'd.b': recordCoordinateTypeDef,
       'd.b.x': literalNumericTypeDef,

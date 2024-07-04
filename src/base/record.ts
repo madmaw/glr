@@ -12,6 +12,7 @@ export function reverse<
   }, {} as Record<Value, Key>);
 }
 
+// TODO simplify the generics
 export function rollup<
   R extends Record<K, V>,
   K extends string | number | symbol = keyof R,
@@ -28,6 +29,7 @@ export function rollup<
   }, records[0]) as R;
 }
 
+// TODO simplify the generics
 export function union<
   R1 extends ReadonlyRecord<K1, V1>,
   K1 extends string | number | symbol,
@@ -45,6 +47,7 @@ export function union<
   };
 }
 
+// TODO simplify the generics
 export function map<
   K extends string | number | symbol,
   V,
@@ -69,6 +72,7 @@ export function map<
   );
 }
 
+// TODO simplify the generics
 export function reduce<
   K extends string | number | symbol,
   V,

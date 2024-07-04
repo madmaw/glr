@@ -11,6 +11,7 @@ import {
   TypeDefType,
 } from './definition';
 
+// TODO rename to `PartialOf`
 export type OptionalOf<F extends TypeDef> = F extends LiteralTypeDef ? OptionalOfLiteral<F>
   : F extends ListTypeDef ? OptionalOfList<F>
   : F extends RecordTypeDef ? OptionalOfRecord<F>
@@ -52,6 +53,7 @@ type OptionalOfDiscriminatingUnion<F extends DiscriminatingUnionTypeDef> = {
   },
 };
 
+// TODO rename to `partialOf`
 export function optionalOf<T extends TypeDef>(t: T): OptionalOf<T> {
   switch (t.type) {
     case TypeDefType.Literal:
