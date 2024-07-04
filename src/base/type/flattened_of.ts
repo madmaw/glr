@@ -108,7 +108,7 @@ type FlattenedOfDiscriminatingUnion<
   // include self
   & ReadonlyRecord<Prefix, F>;
 
-function prefixOf(prefix: string, postfix: string | number) {
+export function prefixOf(prefix: string, postfix: string | number) {
   return prefix === '' ? `${postfix}` : `${prefix}.${postfix}`;
 }
 

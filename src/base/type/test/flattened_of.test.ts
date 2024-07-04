@@ -39,6 +39,16 @@ describe('FlattenedOf', function () {
       };
       expect(flattened).toBeDefined();
     });
+
+    it('can look up via expression index', function () {
+      const flattened: FlattenedOf<typeof listTypeDef, 'l'> = {
+        l: listTypeDef,
+        'l.0': literalNumericTypeDef,
+        'l.1': literalNumericTypeDef,
+      };
+      const x = flattened[`l.${1}`];
+      expect(x).toBeDefined();
+    });
   });
 
   describe('record', function () {
