@@ -15,20 +15,21 @@ import { type PathsOf } from 'base/type/paths_of';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
 
-type FlattenedValuesOf<T extends TypeDef> = Readonly<{
-  [K in PathsOf<T>]: {
-    readonly typePath: PathsOf<T, 'n'>,
+export type FlattenedValuesOf<T extends TypeDef, Prefix extends string> = Readonly<{
+  [K in PathsOf<T, Prefix>]: {
+    readonly typePath: PathsOf<T, Prefix>,
     // causes typescript type checker to eventually complain about an infinite loop
     // @ts-expect-error expected
-    readonly value: ValueTypeOf<FlattenedOf<T>[K]>,
+    readonly value: ValueTypeOf<FlattenedOf<T, Prefix>[K]>,
+    // @ts-expect-error expected
+    readonly setValue?: (value: ValueTypeOf<FlattenedOf<T, Prefix>[K]>) => void,
   };
 }>;
 
 type InternalFlattenedValues = Record<string, {
   readonly typePath: string,
-  // gets cast to a type-safe value for callers
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly value: any,
+  readonly value: ValueTypeOf<TypeDef>,
+  readonly setValue?: (value: ValueTypeOf<TypeDef>) => void,
 }>;
 
 export function flatten<
@@ -38,12 +39,12 @@ export function flatten<
   def: T,
   v: ValueTypeOf<T>,
   prefix: Prefix,
-): FlattenedValuesOf<T> {
+): FlattenedValuesOf<T, Prefix> {
   const acc: InternalFlattenedValues = {};
-  flattenInternal(acc, def, v, prefix, prefix);
+  flattenInternal(acc, def, v, prefix, prefix, undefined);
   // cast to type-safe value
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return acc as FlattenedValuesOf<T>;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+  return acc as any;
 }
 
 function flattenInternal(
@@ -52,10 +53,12 @@ function flattenInternal(
   value: ValueTypeOf<TypeDef>,
   valuePath: string,
   typePath: string,
+  setValue: ((value: ValueTypeOf<TypeDef>) => void) | undefined,
 ) {
   acc[valuePath] = {
     value,
     typePath,
+    setValue,
   };
   switch (def.type) {
     case TypeDefType.Literal:
@@ -89,7 +92,10 @@ function flattenList(
   return value.reduce(
     function (acc, e, i) {
       const elementValuePath = prefixOf(valuePath, i);
-      return flattenInternal(acc, elements, e, elementValuePath, elementTypePath);
+      const setValue = function (newValue: ValueTypeOf<TypeDef>) {
+        value[i] = newValue;
+      };
+      return flattenInternal(acc, elements, e, elementValuePath, elementTypePath, setValue);
     },
     acc,
   );
@@ -107,12 +113,16 @@ function flattenFields(
   return reduce(
     fields,
     function (acc, key, field): InternalFlattenedValues {
+      const setValue = function (newValue: ValueTypeOf<TypeDef>) {
+        value[key] = newValue;
+      };
       return flattenInternal(
         acc,
         field.valueType,
         value[key],
         prefixOf(valuePath, key),
         prefixOf(typePath, key),
+        setValue,
       );
     },
     acc,
@@ -159,7 +169,7 @@ function flattenDiscriminatingUnion(
     acc,
     fields,
     value,
-    valuePath,
-    typePath,
+    prefixOf(valuePath, disc),
+    prefixOf(typePath, disc),
   );
 }

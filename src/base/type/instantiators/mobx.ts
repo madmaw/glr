@@ -85,14 +85,14 @@ export type MobxValueTypeOf<T extends TypeDef> = ValueTypeOf<T, MobxObservable>;
 export function instantiateMobxObservable<T extends TypeDef>(
   def: T,
   value: ValueTypeOf<ReadonlyOf<T>>,
-) {
+): MobxValueTypeOf<T> {
   return instantiateCopy<T, MobxValueTypeOf<T>>(def, value, observeValue);
 }
 
 export function becomeMobxObservable<T extends TypeDef>(
   def: T,
-  target: ValueTypeOf<T, MobxObservable>,
+  target: MobxValueTypeOf<T>,
   value: ValueTypeOf<ReadonlyOf<T>>,
-) {
+): MobxValueTypeOf<T> {
   return become(def, instantiateMobxObservable, target, value);
 }
