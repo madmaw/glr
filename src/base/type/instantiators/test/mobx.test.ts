@@ -1,4 +1,8 @@
-import { instantiateMobxObservable } from 'base/type/instantiators/mobx';
+import {
+  becomeMobxObservable,
+  instantiateMobxObservable,
+  type MobxValueTypeOf,
+} from 'base/type/instantiators/mobx';
 import { type ReadonlyOf } from 'base/type/readonly_of';
 import {
   discriminatingUnionTypeDef,
@@ -15,7 +19,7 @@ import {
 } from 'mobx';
 import { expectEquals } from 'testing/helpers';
 
-describe('mobx', function () {
+describe('instantiateMobxObservable', function () {
   describe('literal numeric value', function () {
     let literal: number;
     const input = 1;
@@ -325,6 +329,43 @@ describe('mobx', function () {
           literal: 1,
         });
       });
+    });
+  });
+});
+
+describe('becomeMobxObservable', function () {
+  describe('list', function () {
+    let list: MobxValueTypeOf<typeof listTypeDef>;
+    let length: number;
+    let disposer: IReactionDisposer;
+
+    beforeEach(function () {
+      list = instantiateMobxObservable(listTypeDef, []);
+      disposer = reaction(
+        function () {
+          return list.length;
+        },
+        function (newLength: number) {
+          length = newLength;
+        },
+        {
+          fireImmediately: true,
+        },
+      );
+      expect(length).toBe(0);
+    });
+
+    afterEach(function () {
+      disposer();
+    });
+
+    it('causes a reaction', function () {
+      runInAction(function () {
+        const result = becomeMobxObservable(listTypeDef, list, [1]);
+        expect(result).toBe(list);
+      });
+      expect(list).toEqual([1]);
+      expect(length).toBe(1);
     });
   });
 });

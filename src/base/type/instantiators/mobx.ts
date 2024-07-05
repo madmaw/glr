@@ -12,12 +12,13 @@ import {
   makeObservable,
   observable,
 } from 'mobx';
+import { become } from './become';
 import { instantiateCopy } from './copy';
 
 function observeValue<T extends TypeDef>(
   v: ValueTypeOf<T>,
   def: T,
-): ValueTypeOf<T, {}> {
+): ValueTypeOf<T> {
   if (v == null) {
     return v;
   }
@@ -73,6 +74,8 @@ function observeValue<T extends TypeDef>(
   }
 }
 
+export type MobxValueTypeOf<T extends TypeDef> = ValueTypeOf<T, MobxObservable>;
+
 /**
  * Creates a mobx observable copy of the supplied value
  * @param def description of the object to create
@@ -83,5 +86,13 @@ export function instantiateMobxObservable<T extends TypeDef>(
   def: T,
   value: ValueTypeOf<ReadonlyOf<T>>,
 ) {
-  return instantiateCopy<T, ValueTypeOf<T, MobxObservable>>(def, value, observeValue);
+  return instantiateCopy<T, MobxValueTypeOf<T>>(def, value, observeValue);
+}
+
+export function becomeMobxObservable<T extends TypeDef>(
+  def: T,
+  target: ValueTypeOf<T, MobxObservable>,
+  value: ValueTypeOf<ReadonlyOf<T>>,
+) {
+  return become(def, instantiateMobxObservable, target, value);
 }
