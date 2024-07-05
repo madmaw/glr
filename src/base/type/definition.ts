@@ -68,3 +68,6 @@ export type DiscriminatingUnionTypeDef<
   readonly discriminator: D,
   readonly unions: U,
 };
+
+// optional
+// TODO allow null/undefined values

@@ -18,6 +18,8 @@ import { UnreachableError } from 'base/unreachable_error';
 type FlattenedValuesOf<T extends TypeDef> = Readonly<{
   [K in PathsOf<T>]: {
     readonly typePath: PathsOf<T, 'n'>,
+    // causes typescript type checker to eventually complain about an infinite loop
+    // @ts-expect-error expected
     readonly value: ValueTypeOf<FlattenedOf<T>[K]>,
   };
 }>;

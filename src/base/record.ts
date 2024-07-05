@@ -95,6 +95,22 @@ export function reduce<
   );
 }
 
+export function forEach<
+  R extends Record<K, V>,
+  K extends string | number | symbol,
+  V,
+>(r: R, f: (k: K, v: R[K]) => void) {
+  return Object.entries<V>(r).forEach(
+    function ([
+      k,
+      v,
+    ]) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      return f(k as K, v as R[K]);
+    },
+  );
+}
+
 export type Mutable<T> = {
   -readonly [K in keyof T]: T[K];
 };
