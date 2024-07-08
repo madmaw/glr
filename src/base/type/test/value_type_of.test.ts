@@ -3,6 +3,7 @@ import {
   type discriminatingUnionTypeDef,
   type listTypeDef,
   type literalNumericTypeDef,
+  type nullableRecordCoordinateTypeDef,
   type recordTypeDef,
 } from './types';
 
@@ -14,6 +15,31 @@ describe('ValueTypeOf', function () {
       let expected: number = 1;
       const t: ValueTypeOf<typeof literalNumericTypeDef> = expected;
       // test assignment in both directions
+      expected = t;
+      expect(t).toBeDefined();
+    });
+  });
+
+  describe('nullable', function () {
+    it('has the expected shape when null', function () {
+      let expected: {
+        x: number,
+        y: number,
+      } | null = null;
+      const t: ValueTypeOf<typeof nullableRecordCoordinateTypeDef> = expected;
+      expected = t;
+      expect(t).toBeNull();
+    });
+
+    it('has the expected shape when non-null', function () {
+      let expected: {
+        x: number,
+        y: number,
+      } | null = {
+        x: 1,
+        y: 2,
+      };
+      const t: ValueTypeOf<typeof nullableRecordCoordinateTypeDef> = expected;
       expected = t;
       expect(t).toBeDefined();
     });

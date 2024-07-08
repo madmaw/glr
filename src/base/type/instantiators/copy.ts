@@ -2,6 +2,7 @@ import { reduce } from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
+  type NullableTypeDef,
   type RecordKey,
   type RecordTypeDef,
   type RecordTypeDefField,
@@ -35,6 +36,12 @@ function instantiate<T extends TypeDef, R extends (ValueTypeOf<ReadonlyOf<T>> | 
   switch (def.type) {
     case TypeDefType.Literal:
       return instantiateLiteral(
+        def,
+        value,
+        modifier,
+      );
+    case TypeDefType.Nullable:
+      return instantiateNullable(
         def,
         value,
         modifier,
@@ -76,6 +83,25 @@ function instantiateLiteral<
   return modifier(v, def);
 }
 
+function instantiateNullable<
+  T extends TypeDef,
+  R extends (ValueTypeOf<ReadonlyOf<T>> | ValueTypeOf<T>),
+>(
+  def: NullableTypeDef,
+  value: ValueTypeOf<ReadonlyOf<T>>,
+  modifier: Modifier<ValueTypeOf<T>, R>,
+): R {
+  const {
+    nonNullableTypeDef: valueType,
+  } = def;
+  if (value == null) {
+    // mutable and immutable null should be the same type
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    return modifier(null as ValueTypeOf<T>, def);
+  }
+  return instantiate(valueType, value, modifier);
+}
+
 function instantiateList<
   T extends TypeDef,
   R extends (ValueTypeOf<ReadonlyOf<T>> | ValueTypeOf<T>),
@@ -106,6 +132,7 @@ function instantiateRecordFields<
   const record = reduce(fields, function (acc, key, field) {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
     const fieldValue = (value as any)[key];
+    // only interested in `undefined` values as `null` values are handled by nullable type def
     if (!field.optional || fieldValue !== undefined) {
       acc[key] = instantiate(field.valueType, fieldValue);
     }

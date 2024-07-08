@@ -25,6 +25,13 @@ function observeValue<T extends TypeDef>(
   switch (def.type) {
     case TypeDefType.Literal:
       return v;
+    case TypeDefType.Nullable:
+      if (v != null) {
+        return observeValue(v, def.nonNullableTypeDef);
+      } else {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        return null as ValueTypeOf<T>;
+      }
     case TypeDefType.List:
       if (!def.readonly) {
         // can't work out that an observable array is an array
@@ -94,5 +101,5 @@ export function becomeMobxObservable<T extends TypeDef>(
   target: MobxValueTypeOf<T>,
   value: ValueTypeOf<ReadonlyOf<T>>,
 ): MobxValueTypeOf<T> {
-  return become(def, instantiateMobxObservable, target, value);
+  return become<T, MobxValueTypeOf<T>>(def, instantiateMobxObservable, target, value);
 }

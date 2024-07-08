@@ -2,6 +2,7 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type NullableTypeDef,
   type RecordTypeDef,
   type RecordTypeDefField,
   TypeDefType,
@@ -76,4 +77,15 @@ export const discriminatingUnionTypeDef: DiscriminatingUnionTypeDef<'disc', {
 export const discriminatingUnionDiscriminatorTypeDef: LiteralTypeDef<'a' | 'b'> = {
   type: TypeDefType.Literal,
   value: undefined!,
+};
+
+export const nullableRecordCoordinateTypeDef: NullableTypeDef<typeof recordCoordinateTypeDef> = {
+  type: TypeDefType.Nullable,
+  nonNullableTypeDef: recordCoordinateTypeDef,
+};
+
+export const listOfNullableCoordinatesTypeDef: ListTypeDef<typeof nullableRecordCoordinateTypeDef> = {
+  type: TypeDefType.List,
+  elements: nullableRecordCoordinateTypeDef,
+  readonly: false,
 };

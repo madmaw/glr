@@ -2,6 +2,7 @@ import { reduce } from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
+  type NullableTypeDef,
   type RecordTypeDef,
   type RecordTypeDefFields,
   type TypeDef,
@@ -54,7 +55,7 @@ function flattenInternal(
   valuePath: string,
   typePath: string,
   setValue: ((value: ValueTypeOf<TypeDef>) => void) | undefined,
-) {
+): InternalFlattenedValues {
   acc[valuePath] = {
     value,
     typePath,
@@ -63,6 +64,8 @@ function flattenInternal(
   switch (def.type) {
     case TypeDefType.Literal:
       return flattenLiteral(acc);
+    case TypeDefType.Nullable:
+      return flattenNullable(acc, def, value, valuePath, typePath, setValue);
     case TypeDefType.List:
       return flattenList(acc, def, value, valuePath, typePath);
     case TypeDefType.Record:
@@ -78,19 +81,39 @@ function flattenLiteral(acc: InternalFlattenedValues) {
   return acc;
 }
 
+function flattenNullable(
+  acc: InternalFlattenedValues,
+  {
+    nonNullableTypeDef: valueType,
+  }: NullableTypeDef,
+  value: ValueTypeOf<NullableTypeDef>,
+  valuePath: string,
+  typePath: string,
+  setValue: ((value: ValueTypeOf<TypeDef>) => void) | undefined,
+): InternalFlattenedValues {
+  if (value != null) {
+    return flattenInternal(acc, valueType, value, valuePath, typePath, setValue);
+  }
+  return acc;
+}
+
 function flattenList(
   acc: InternalFlattenedValues,
   def: ListTypeDef,
   value: ValueTypeOf<ListTypeDef>,
   valuePath: string,
   typePath: string,
-) {
+): InternalFlattenedValues {
   const {
     elements,
   } = def;
   const elementTypePath = prefixOf(typePath, 'n');
   return value.reduce(
-    function (acc, e, i) {
+    function (
+      acc: InternalFlattenedValues,
+      e: ValueTypeOf<TypeDef>,
+      i: number,
+    ) {
       const elementValuePath = prefixOf(valuePath, i);
       const setValue = function (newValue: ValueTypeOf<TypeDef>) {
         value[i] = newValue;

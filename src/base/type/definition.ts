@@ -2,6 +2,7 @@ import { type ReadonlyRecord } from 'base/record';
 
 export const enum TypeDefType {
   Literal = 1,
+  Nullable,
   List,
   Record,
   DiscriminatingUnion,
@@ -9,6 +10,7 @@ export const enum TypeDefType {
 
 export type TypeDef =
   | LiteralTypeDef
+  | NullableTypeDef
   | ListTypeDef
   | RecordTypeDef
   | DiscriminatingUnionTypeDef;
@@ -20,6 +22,17 @@ export type LiteralTypeDef<V = any> = {
   readonly type: TypeDefType.Literal,
   // never actually populate
   readonly value: V,
+};
+
+// nullable
+
+export type NullableTypeDef<
+  // avoid circular ref by defaulting to `any`
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends TypeDef = any,
+> = {
+  readonly type: TypeDefType.Nullable,
+  readonly nonNullableTypeDef: T,
 };
 
 // list
@@ -68,6 +81,3 @@ export type DiscriminatingUnionTypeDef<
   readonly discriminator: D,
   readonly unions: U,
 };
-
-// optional
-// TODO allow null/undefined values

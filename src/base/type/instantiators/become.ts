@@ -2,6 +2,7 @@ import { forEach } from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
+  type NullableTypeDef,
   type RecordTypeDef,
   type RecordTypeDefFields,
   type TypeDef,
@@ -42,6 +43,8 @@ function becomeInternal<T extends TypeDef>(
   switch (def.type) {
     case TypeDefType.Literal:
       return becomeLiteral(prototype);
+    case TypeDefType.Nullable:
+      return becomeNullable(def, instantiator, target, prototype);
     case TypeDefType.List:
       return becomeList(def, instantiator, target, prototype);
     case TypeDefType.Record:
@@ -56,6 +59,20 @@ function becomeInternal<T extends TypeDef>(
 function becomeLiteral(prototype: ValueTypeOf<ReadonlyOf<TypeDef>>): ValueTypeOf<TypeDef> {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return prototype as ValueTypeOf<TypeDef>;
+}
+
+function becomeNullable(
+  {
+    nonNullableTypeDef: valueType,
+  }: NullableTypeDef,
+  instantiator: InternalInstantiator,
+  target: ValueTypeOf<ListTypeDef>,
+  prototype: ValueTypeOf<ReadonlyOf<NullableTypeDef>>,
+): ValueTypeOf<NullableTypeDef> {
+  if (prototype == null) {
+    return null;
+  }
+  return becomeInternal(valueType, instantiator, target, prototype);
 }
 
 function becomeList(
@@ -102,9 +119,9 @@ function becomeRecordFields(
     const targetValue = (target as any)[key];
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
     const prototypeValue = (prototype as any)[key];
-    const value = optional && prototypeValue == null
-      ? prototypeValue // undefined
-      : optional && targetValue == null
+    const value = optional && prototypeValue === undefined
+      ? prototypeValue
+      : optional && targetValue === undefined
       ? instantiator(valueType, prototypeValue)
       : becomeInternal(valueType, instantiator, targetValue, prototypeValue);
     if (value !== targetValue) {

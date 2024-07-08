@@ -34,6 +34,7 @@ module.exports = {
     'unused-imports',
     'no-relative-import-paths',
     'lingui',
+    'no-autofix',
   ],
   extends: [
     'eslint:recommended',
@@ -51,7 +52,9 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    '@typescript-eslint/consistent-type-imports': [
+    // consistent type imports conflicts with dprint import ordering, so we
+    // disable the auto-fixing and just make it a manual process :(
+    'no-autofix/@typescript-eslint/consistent-type-imports': [
       'warn',
       {
         prefer: 'type-imports',

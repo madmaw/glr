@@ -22,6 +22,12 @@ describe('FlattenedOf', function () {
       expect(flattened).toBeDefined();
     });
   });
+
+  describe('nullable', function () {
+    it('passes type checking', function () {
+    });
+  });
+
   describe('list', function () {
     it('passes type checking', function () {
       const flattened: FlattenedOf<typeof listTypeDef, 'l'> = {

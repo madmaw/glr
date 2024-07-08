@@ -2,19 +2,26 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type NullableTypeDef,
   type RecordTypeDef,
   type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
 } from './definition';
 
-export type ValueTypeOf<F extends TypeDef, Extra = {}> = F extends LiteralTypeDef ? TypeOfLiteral<F>
+export type ValueTypeOf<F extends TypeDef, Extra = {}> = F extends LiteralTypeDef ? ValueTypeOfLiteral<F>
+  : F extends NullableTypeDef ? ValueTypeOfNullable<F, Extra>
   : F extends ListTypeDef ? ValueTypeOfList<F, Extra>
   : F extends RecordTypeDef ? ValueTypeOfRecord<F, Extra>
   : F extends DiscriminatingUnionTypeDef ? ValueTypeOfDiscriminatingUnion<F, Extra>
   : never;
 
-type TypeOfLiteral<F extends LiteralTypeDef> = F['value'];
+type ValueTypeOfLiteral<F extends LiteralTypeDef> = F['value'];
+
+type ValueTypeOfNullable<
+  F extends NullableTypeDef,
+  Extra,
+> = ValueTypeOf<F['nonNullableTypeDef'], Extra> | null;
 
 export type ValueTypeOfList<F extends ListTypeDef, Extra> =
   & (F['readonly'] extends true ? readonly ValueTypeOf<F['elements']>[]

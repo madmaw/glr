@@ -4,6 +4,7 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type NullableTypeDef,
   type RecordTypeDef,
   type RecordTypeDefField,
   type RecordTypeDefFields,
@@ -12,6 +13,7 @@ import {
 } from './definition';
 
 export type ReadonlyOf<F extends TypeDef> = F extends LiteralTypeDef ? ReadonlyOfLiteral<F>
+  : F extends NullableTypeDef ? ReadonlyOfNullable<F>
   : F extends ListTypeDef ? ReadonlyOfList<F>
   : F extends RecordTypeDef ? ReadonlyOfRecord<F>
   : F extends DiscriminatingUnionTypeDef ? ReadonlyOfDiscriminatingUnion<F>
@@ -20,6 +22,11 @@ export type ReadonlyOf<F extends TypeDef> = F extends LiteralTypeDef ? ReadonlyO
 type ReadonlyOfLiteral<F extends LiteralTypeDef> = {
   readonly type: TypeDefType.Literal,
   readonly value: F['value'],
+};
+
+type ReadonlyOfNullable<F extends NullableTypeDef> = {
+  readonly type: TypeDefType.Nullable,
+  readonly nonNullableTypeDef: ReadonlyOf<F['nonNullableTypeDef']>,
 };
 
 export type ReadonlyOfList<F extends ListTypeDef> = {
@@ -57,6 +64,10 @@ export function readonlyOf<T extends TypeDef>(t: T): ReadonlyOf<T> {
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       return readonlyOfLiteral(t) as ReadonlyOf<T>;
+    case TypeDefType.Nullable:
+      // converting the implicit any's back causes problems
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      return readonlyOfNullable(t) as ReadonlyOf<T>;
     case TypeDefType.List:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -80,6 +91,16 @@ function readonlyOfLiteral<T extends LiteralTypeDef>({
   return {
     type: TypeDefType.Literal,
     value,
+  };
+}
+
+function readonlyOfNullable<
+  N extends TypeDef,
+  T extends NullableTypeDef<N>,
+>({ nonNullableTypeDef: valueType }: T): ReadonlyOfNullable<T> {
+  return {
+    type: TypeDefType.Nullable,
+    nonNullableTypeDef: readonlyOf(valueType),
   };
 }
 

@@ -2,6 +2,7 @@ import { type ReadonlyRecord } from 'base/record';
 import {
   type ListTypeDef,
   type LiteralTypeDef,
+  type NullableTypeDef,
   type RecordKey,
   type RecordTypeDef,
   type RecordTypeDefField,
@@ -9,9 +10,9 @@ import {
   TypeDefType,
 } from './definition';
 import {
-  type OptionalOf,
-  optionalOf,
-} from './optional_of';
+  type PartialOf,
+  partialOf,
+} from './partial_of';
 import {
   type ReadonlyOf,
   readonlyOf,
@@ -28,6 +29,13 @@ export function literal<T>(): LiteralTypeDefBuilder<T> {
 export const stringBuilder = literal<string>();
 export const numberBuilder = literal<number>();
 export const booleanBuilder = literal<boolean>();
+
+export function nullable<T extends TypeDef>(nonNullable: TypeDefBuilder<T>): NullableTypeDefBuilder<T> {
+  return new NullableTypeDefBuilder({
+    type: TypeDefType.Nullable,
+    nonNullableTypeDef: nonNullable.typeDef,
+  });
+}
 
 export function list<T extends TypeDef>(elements: TypeDefBuilder<T>): ListTypeDefBuilder<T, false> {
   return new ListTypeDefBuilder({
@@ -59,8 +67,8 @@ class TypeDefBuilder<T extends TypeDef> {
     return new TypeDefBuilder(readonlyOf(this.typeDef));
   }
 
-  get optionalOf(): TypeDefBuilder<OptionalOf<T>> {
-    return new TypeDefBuilder(optionalOf(this.typeDef));
+  get partialOf(): TypeDefBuilder<PartialOf<T>> {
+    return new TypeDefBuilder(partialOf(this.typeDef));
   }
 
   constructor(readonly typeDef: T) {
@@ -68,6 +76,9 @@ class TypeDefBuilder<T extends TypeDef> {
 }
 
 class LiteralTypeDefBuilder<T> extends TypeDefBuilder<LiteralTypeDef<T>> {
+}
+
+class NullableTypeDefBuilder<T extends TypeDef> extends TypeDefBuilder<NullableTypeDef<T>> {
 }
 
 class ListTypeDefBuilder<
