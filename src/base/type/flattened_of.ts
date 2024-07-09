@@ -17,23 +17,36 @@ import {
   TypeDefType,
 } from './definition';
 
+type DefaultDepth = 21;
+
 export type FlattenedOf<
   F extends TypeDef,
   Prefix extends string = '',
   VariableSegmentOverride extends string | undefined = undefined,
-> =
-  & FlattenedOfChildren<F, Prefix, VariableSegmentOverride>
-  & ReadonlyRecord<Prefix, F>;
+> = InternalFlattenedOf<F, Prefix, VariableSegmentOverride, DefaultDepth>;
 
-type FlattenedOfChildren<
+type InternalFlattenedOf<
   F extends TypeDef,
-  Prefix extends string = '',
-  VariableSegmentOverride extends string | undefined = undefined,
+  Prefix extends string,
+  VariableSegmentOverride extends string | undefined,
+  Depth extends number,
+  NextDepth extends number = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20][Depth],
+> = NextDepth extends -1 ? {}
+  :
+    & InternalFlattenedOfChildren<F, Prefix, VariableSegmentOverride, NextDepth>
+    & ReadonlyRecord<Prefix, F>;
+
+type InternalFlattenedOfChildren<
+  F extends TypeDef,
+  Prefix extends string,
+  VariableSegmentOverride extends string | undefined,
+  Depth extends number,
 > = F extends LiteralTypeDef ? FlattenedOfLiteralChildren
-  : F extends NullableTypeDef ? FlattenedOfNullableChildren<F, Prefix>
-  : F extends ListTypeDef ? FlattenedOfListChildren<F, Prefix, VariableSegmentOverride>
-  : F extends RecordTypeDef ? FlattenedOfRecordChildren<F, Prefix, VariableSegmentOverride>
-  : F extends DiscriminatingUnionTypeDef ? FlattenedOfDiscriminatingUnionChildren<F, Prefix, VariableSegmentOverride>
+  : F extends NullableTypeDef ? FlattenedOfNullableChildren<F, Prefix, VariableSegmentOverride, Depth>
+  : F extends ListTypeDef ? FlattenedOfListChildren<F, Prefix, VariableSegmentOverride, Depth>
+  : F extends RecordTypeDef ? FlattenedOfRecordChildren<F, Prefix, VariableSegmentOverride, Depth>
+  : F extends DiscriminatingUnionTypeDef
+    ? FlattenedOfDiscriminatingUnionChildren<F, Prefix, VariableSegmentOverride, Depth>
   : never;
 
 type PrefixOf<
@@ -48,33 +61,40 @@ type FlattenedOfLiteralChildren = {};
 type FlattenedOfNullableChildren<
   F extends NullableTypeDef,
   Prefix extends string,
-> = FlattenedOfChildren<F['nonNullableTypeDef'], Prefix>;
+  VariableSegmentOverride extends string | undefined,
+  Depth extends number,
+> = InternalFlattenedOfChildren<F['nonNullableTypeDef'], Prefix, VariableSegmentOverride, Depth>;
 
 type FlattenedOfListChildren<
   F extends ListTypeDef,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
-> = FlattenedOf<
+  Depth extends number,
+> = InternalFlattenedOf<
   F['elements'],
   PrefixOf<
     Prefix,
     VariableSegmentOverride extends undefined ? number : VariableSegmentOverride
-  >
+  >,
+  VariableSegmentOverride,
+  Depth
 >;
 
 type FlattenedOfRecordFieldGroup<
   Fields extends Record<string, RecordTypeDefField>,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
+  Depth extends number,
 > =
   // if it's empty, then iterating the fields returns never, not an empty set, so
   // we need special handling for this
   {} extends Fields ? {}
     : UnionToIntersection<{
-      readonly [K in keyof Fields]: FlattenedOf<
+      readonly [K in keyof Fields]: InternalFlattenedOf<
         Fields[K]['valueType'],
         PrefixOf<Prefix, K>,
-        VariableSegmentOverride
+        VariableSegmentOverride,
+        Depth
       >;
     }[keyof Fields]>;
 
@@ -82,22 +102,26 @@ type FlattenedOfRecordFields<
   F extends RecordTypeDefFields,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
-> = FlattenedOfRecordFieldGroup<F, Prefix, VariableSegmentOverride>;
+  Depth extends number,
+> = FlattenedOfRecordFieldGroup<F, Prefix, VariableSegmentOverride, Depth>;
 
 type FlattenedOfRecordChildren<
   F extends RecordTypeDef,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
+  Depth extends number,
 > = FlattenedOfRecordFields<
   F['fields'],
   Prefix,
-  VariableSegmentOverride
+  VariableSegmentOverride,
+  Depth
 >;
 
 type FlattenedOfDiscriminatingUnionChildren<
   F extends DiscriminatingUnionTypeDef,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
+  Depth extends number,
 > =
   & UnionToIntersection<
     {
@@ -105,7 +129,8 @@ type FlattenedOfDiscriminatingUnionChildren<
         & FlattenedOfRecordFields<
           F['unions'][K],
           PrefixOf<Prefix, K>,
-          VariableSegmentOverride
+          VariableSegmentOverride,
+          Depth
         >
         // synthesize a type for PrefixOf<Prefix, K>
         & ReadonlyRecord<PrefixOf<Prefix, K>, RecordTypeDef<F['unions'][K]>>;
@@ -132,112 +157,116 @@ export function flattenedOfWithOverride<T extends TypeDef, Prefix extends string
   prefix: Prefix,
   override: Override,
 ): FlattenedOf<T, Prefix, Override> {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return flattenedOfInternal(t, prefix, override) as FlattenedOf<T, Prefix, Override>;
+  const acc: Record<string, TypeDef> = {};
+  flattenedOfInternal(acc, t, prefix, override);
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+  return acc as any;
 }
 
-function flattenedOfInternal(t: TypeDef, prefix: string, override: string): Record<string, TypeDef> {
+function flattenedOfInternal(
+  acc: Record<string, TypeDef>,
+  t: TypeDef,
+  prefix: string,
+  override: string,
+): void {
+  acc[prefix] = t;
+  flattenedOfInternalChildren(acc, t, prefix, override);
+}
+
+function flattenedOfInternalChildren(
+  acc: Record<string, TypeDef>,
+  t: TypeDef,
+  prefix: string,
+  override: string,
+): void {
   switch (t.type) {
     case TypeDefType.Literal:
-      return flattenedOfLiteral(t, prefix);
+      return flattenedOfLiteral();
     case TypeDefType.Nullable:
-      return flattenedOfNullable(t, prefix, override);
+      return flattenedOfNullable(acc, t, prefix, override);
     case TypeDefType.List:
-      return flattenedOfList(t, prefix, override);
+      return flattenedOfList(acc, t, prefix, override);
     case TypeDefType.Record:
-      return flattenedOfRecord(t, prefix, override);
+      return flattenedOfRecord(acc, t, prefix, override);
     case TypeDefType.DiscriminatingUnion:
-      return flattenedOfDiscriminatingUnion(t, prefix, override);
+      return flattenedOfDiscriminatingUnion(acc, t, prefix, override);
     default:
       throw new UnreachableError(t);
   }
 }
 
-function flattenedOfLiteral(
-  t: LiteralTypeDef,
-  prefix: string,
-): Record<string, TypeDef> {
-  return {
-    [prefix]: t,
-  };
+function flattenedOfLiteral(): void {
 }
 
 function flattenedOfNullable(
+  acc: Record<string, TypeDef>,
   { nonNullableTypeDef: valueType }: NullableTypeDef,
   prefix: string,
   override: string,
-): Record<string, TypeDef> {
-  return flattenedOfInternal(valueType, prefix, override);
+): void {
+  flattenedOfInternalChildren(acc, valueType, prefix, override);
 }
 
 function flattenedOfList(
+  acc: Record<string, TypeDef>,
   t: ListTypeDef,
   prefix: string,
   override: string,
-): Record<string, TypeDef> {
-  return {
-    ...flattenedOfInternal(t.elements, prefixOf(prefix, override), override),
-    [prefix]: t,
-  };
+): void {
+  flattenedOfInternal(acc, t.elements, prefixOf(prefix, override), override);
 }
 
 function flattenedOfRecord(
+  acc: Record<string, TypeDef>,
   t: RecordTypeDef,
   prefix: string,
   override: string,
-): Record<string, TypeDef> {
-  return {
-    ...flattenedOfRecordFields(t.fields, prefix, override),
-    [prefix]: t,
-  };
+): void {
+  return flattenedOfRecordFields(acc, t.fields, prefix, override);
 }
 
 function flattenedOfDiscriminatingUnion(
+  acc: Record<string, TypeDef>,
   t: DiscriminatingUnionTypeDef,
   prefix: string,
   override: string,
-): Record<string, TypeDef> {
-  return reduce<string, RecordTypeDefFields, Record<string, TypeDef>>(
+): void {
+  acc[prefixOf(prefix, t.discriminator)] = {
+    type: TypeDefType.Literal,
+    value: undefined,
+  };
+  reduce<string, RecordTypeDefFields, Record<string, TypeDef>>(
     t.unions,
     function (acc, k, fields) {
       const key = prefixOf(prefix, k);
-      return {
-        ...flattenedOfRecordFields(fields, key, override),
-        [key]: {
-          type: TypeDefType.Record,
-          fields,
-        },
-        ...acc,
+      flattenedOfRecordFields(acc, fields, key, override);
+      acc[key] = {
+        type: TypeDefType.Record,
+        fields,
       };
+      return acc;
     },
-    {
-      [prefixOf(prefix, t.discriminator)]: {
-        type: TypeDefType.Literal,
-        value: undefined,
-      },
-      [prefix]: t,
-    },
+    acc,
   );
 }
 
 function flattenedOfRecordFields(
+  acc: Record<string, TypeDef>,
   t: RecordTypeDefFields,
   prefix: string,
   override: string,
-): Record<string, TypeDef> {
-  return reduce(
+): void {
+  reduce(
     t,
     function (acc, k, field) {
-      const flattenedField = flattenedOfInternal(
+      flattenedOfInternal(
+        acc,
         field.valueType,
         prefixOf(prefix, k),
         override,
       );
-      return {
-        ...acc,
-        ...flattenedField,
-      };
+      return acc;
     },
-    {},
+    acc,
   );
 }

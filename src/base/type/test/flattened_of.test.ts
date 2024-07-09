@@ -7,6 +7,7 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
+  nullableRecordCoordinateTypeDef,
   recordCoordinateTypeDef,
   recordTypeDef,
 } from './types';
@@ -25,6 +26,14 @@ describe('FlattenedOf', function () {
 
   describe('nullable', function () {
     it('passes type checking', function () {
+      let expected = {
+        c: nullableRecordCoordinateTypeDef,
+        'c.x': literalNumericTypeDef,
+        'c.y': literalNumericTypeDef,
+      };
+      const flattened: FlattenedOf<typeof nullableRecordCoordinateTypeDef, 'c'> = expected;
+      expected = flattened;
+      expect(flattened).toBeDefined();
     });
   });
 
@@ -135,6 +144,8 @@ describe('FlattenedOf', function () {
         b: recordCoordinateTypeDef,
         'b.x': literalNumericTypeDef,
         'b.y': literalNumericTypeDef,
+        // error
+        // 'a.c': literalNumericTypeDef,
       } as const;
       const flattened: FlattenedOf<typeof discriminatingUnionTypeDef, ''> = expected;
       expected = flattened;
@@ -165,6 +176,15 @@ describe('flattenedOf', function () {
     const flattened = flattenedOf(literalNumericTypeDef, 'l');
     expect(flattened).toEqual({
       l: literalNumericTypeDef,
+    });
+  });
+
+  it('produces the expected nullable', function () {
+    const flattened = flattenedOf(nullableRecordCoordinateTypeDef, 'n');
+    expect(flattened).toEqual({
+      n: nullableRecordCoordinateTypeDef,
+      'n.x': literalNumericTypeDef,
+      'n.y': literalNumericTypeDef,
     });
   });
 

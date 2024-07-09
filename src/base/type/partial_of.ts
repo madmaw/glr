@@ -27,7 +27,7 @@ type PartialOfLiteral<F extends LiteralTypeDef> = {
 
 type PartialOfNullable<F extends NullableTypeDef> = {
   type: TypeDefType.Nullable,
-  nonNullableTypeDef: F['nonNullableTypeDef'],
+  nonNullableTypeDef: PartialOf<F['nonNullableTypeDef']>,
 };
 
 type PartialOfList<F extends ListTypeDef> = {

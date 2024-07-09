@@ -12,18 +12,19 @@ import {
   type FlattenedOf,
   prefixOf,
 } from 'base/type/flattened_of';
-import { type PathsOf } from 'base/type/paths_of';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
 
-export type FlattenedValuesOf<T extends TypeDef, Prefix extends string> = Readonly<{
-  [K in PathsOf<T, Prefix>]: {
-    readonly typePath: PathsOf<T, Prefix>,
-    // causes typescript type checker to eventually complain about an infinite loop
-    // @ts-expect-error expected
-    readonly value: ValueTypeOf<FlattenedOf<T, Prefix>[K]>,
-    // @ts-expect-error expected
-    readonly setValue?: (value: ValueTypeOf<FlattenedOf<T, Prefix>[K]>) => void,
+export type FlattenedValuesOf<
+  T extends TypeDef,
+  Prefix extends string,
+  F extends Record<string, TypeDef> = FlattenedOf<T, Prefix>,
+  P extends string | number | symbol = FlattenedOf<T, Prefix, 'n'>,
+> = Readonly<{
+  [K in keyof F]: {
+    readonly typePath: P,
+    readonly value: ValueTypeOf<F[K]>,
+    readonly setValue?: (value: ValueTypeOf<F[K]>) => void,
   };
 }>;
 

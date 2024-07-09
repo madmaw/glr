@@ -101,5 +101,5 @@ export function becomeMobxObservable<T extends TypeDef>(
   target: MobxValueTypeOf<T>,
   value: ValueTypeOf<ReadonlyOf<T>>,
 ): MobxValueTypeOf<T> {
-  return become<T, MobxValueTypeOf<T>>(def, instantiateMobxObservable, target, value);
+  return become<T, MobxValueTypeOf<T>>(def, instantiateMobxObservable<T>, target, value);
 }

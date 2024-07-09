@@ -9,11 +9,24 @@ import {
   type TypeDef,
 } from './definition';
 
-export type ValueTypeOf<F extends TypeDef, Extra = {}> = F extends LiteralTypeDef ? ValueTypeOfLiteral<F>
-  : F extends NullableTypeDef ? ValueTypeOfNullable<F, Extra>
-  : F extends ListTypeDef ? ValueTypeOfList<F, Extra>
-  : F extends RecordTypeDef ? ValueTypeOfRecord<F, Extra>
-  : F extends DiscriminatingUnionTypeDef ? ValueTypeOfDiscriminatingUnion<F, Extra>
+type DefaultDepth = 21;
+
+export type ValueTypeOf<
+  F extends TypeDef,
+  Extra = {},
+> = InternalValueTypeOf<F, Extra, DefaultDepth>;
+
+type InternalValueTypeOf<
+  F extends TypeDef,
+  Extra,
+  Depth extends number,
+  NextDepth extends number = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20][Depth],
+> = NextDepth extends -1 ? never
+  : F extends LiteralTypeDef ? ValueTypeOfLiteral<F>
+  : F extends NullableTypeDef ? ValueTypeOfNullable<F, Extra, NextDepth>
+  : F extends ListTypeDef ? InternalValueTypeOfList<F, Extra, NextDepth>
+  : F extends RecordTypeDef ? InternalValueTypeOfRecord<F, Extra, NextDepth>
+  : F extends DiscriminatingUnionTypeDef ? InternalValueTypeOfDiscriminatingUnion<F, Extra, NextDepth>
   : never;
 
 type ValueTypeOfLiteral<F extends LiteralTypeDef> = F['value'];
@@ -21,11 +34,17 @@ type ValueTypeOfLiteral<F extends LiteralTypeDef> = F['value'];
 type ValueTypeOfNullable<
   F extends NullableTypeDef,
   Extra,
-> = ValueTypeOf<F['nonNullableTypeDef'], Extra> | null;
+  Depth extends number,
+> = InternalValueTypeOf<F['nonNullableTypeDef'], Extra, Depth> | null;
 
-export type ValueTypeOfList<F extends ListTypeDef, Extra> =
-  & (F['readonly'] extends true ? readonly ValueTypeOf<F['elements']>[]
-    : ValueTypeOf<F['elements']>[])
+export type ValueTypeOfList<
+  F extends ListTypeDef,
+  Extra = {},
+> = InternalValueTypeOfList<F, Extra, DefaultDepth>;
+
+type InternalValueTypeOfList<F extends ListTypeDef, Extra, Depth extends number> =
+  & (F['readonly'] extends true ? readonly InternalValueTypeOf<F['elements'], Extra, Depth>[]
+    : InternalValueTypeOf<F['elements'], Extra, Depth>[])
   & (Extra);
 
 type MutableValueTypesOfFields<F extends RecordTypeDefFields> = {
@@ -46,35 +65,51 @@ type ReadonlyOptionalValueTypesOfFields<F extends RecordTypeDefFields> = {
 
 export type ValueTypeOfRecord<
   F extends RecordTypeDef,
+  Extra = {},
+> = InternalValueTypeOfRecord<F, Extra, DefaultDepth>;
+
+type InternalValueTypeOfRecord<
+  F extends RecordTypeDef,
   Extra,
-> = ValueTypeOfRecordFields<F['fields'], Extra>;
+  Depth extends number,
+> = InternalValueTypeOfRecordFields<F['fields'], Extra, Depth>;
 
 export type ValueTypeOfRecordFields<
   F extends RecordTypeDefFields,
   Extra,
+> = InternalValueTypeOfRecordFields<F, Extra, DefaultDepth>;
+
+type InternalValueTypeOfRecordFields<
+  F extends RecordTypeDefFields,
+  Extra,
+  Depth extends number,
 > = F extends RecordTypeDefFields ?
     & {
-      -readonly [K in keyof MutableValueTypesOfFields<F>]-?: ValueTypeOf<
+      -readonly [K in keyof MutableValueTypesOfFields<F>]-?: InternalValueTypeOf<
         MutableValueTypesOfFields<F>[K],
-        Extra
+        Extra,
+        Depth
       >;
     }
     & {
-      -readonly [K in keyof MutableOptionalValueTypesOfFields<F>]?: ValueTypeOf<
+      -readonly [K in keyof MutableOptionalValueTypesOfFields<F>]?: InternalValueTypeOf<
         MutableOptionalValueTypesOfFields<F>[K],
-        Extra
+        Extra,
+        Depth
       >;
     }
     & {
-      readonly [K in keyof ReadonlyValueTypesOfFields<F>]-?: ValueTypeOf<
+      readonly [K in keyof ReadonlyValueTypesOfFields<F>]-?: InternalValueTypeOf<
         ReadonlyValueTypesOfFields<F>[K],
-        Extra
+        Extra,
+        Depth
       >;
     }
     & {
-      readonly [K in keyof ReadonlyOptionalValueTypesOfFields<F>]?: ValueTypeOf<
+      readonly [K in keyof ReadonlyOptionalValueTypesOfFields<F>]?: InternalValueTypeOf<
         ReadonlyOptionalValueTypesOfFields<F>[K],
-        Extra
+        Extra,
+        Depth
       >;
     }
     & Extra
@@ -82,9 +117,15 @@ export type ValueTypeOfRecordFields<
 
 export type ValueTypeOfDiscriminatingUnion<
   F extends DiscriminatingUnionTypeDef,
+  Extra = {},
+> = InternalValueTypeOfDiscriminatingUnion<F, Extra, DefaultDepth>;
+
+type InternalValueTypeOfDiscriminatingUnion<
+  F extends DiscriminatingUnionTypeDef,
   Extra,
+  Depth extends number,
 > = F extends DiscriminatingUnionTypeDef<infer D, infer U> ? {
-    [K in keyof U]: ValueTypeOfRecordFields<U[K], Extra> & {
+    [K in keyof U]: InternalValueTypeOfRecordFields<U[K], Extra, Depth> & {
       readonly [V in D]: K;
     };
   }[keyof U] & Extra

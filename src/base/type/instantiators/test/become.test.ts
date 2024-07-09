@@ -13,11 +13,12 @@ import { type ValueTypeOf } from 'base/type/value_type_of';
 describe('become', function () {
   let instantiator: <T extends TypeDef>(t: T, v: ValueTypeOf<ReadonlyOf<T>>) => ValueTypeOf<T>;
   beforeEach(function () {
+    // always just return the supplied value
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     instantiator = vitest.fn(function<T extends TypeDef> (_t: T, v: ValueTypeOf<ReadonlyOf<T>>) {
-      // always just return the supplied value
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return v as ValueTypeOf<T>;
-    });
+      return v;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any;
   });
 
   describe('literal', function () {

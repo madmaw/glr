@@ -61,6 +61,9 @@ module.exports = {
         fixStyle: 'inline-type-imports',
       },
     ],
+    // annoying to have const auto-fixed when you're in the middle of coding with a let
+    'prefer-const': 'off',
+    'no-autofix/prefer-const': 'error',
     'no-console': ['warn'],
     'no-alert': ['warn'],
     'no-debugger': ['warn'],
