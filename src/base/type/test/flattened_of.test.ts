@@ -60,6 +60,7 @@ describe('FlattenedOf', function () {
         l: listTypeDef,
         'l.0': literalNumericTypeDef,
         'l.1': literalNumericTypeDef,
+        'l.2': literalNumericTypeDef,
       };
       const x = flattened[`l.${1}`];
       expect(x).toBeDefined();

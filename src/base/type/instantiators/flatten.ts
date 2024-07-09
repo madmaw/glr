@@ -1,32 +1,228 @@
-import { reduce } from 'base/record';
+import { type UnionToIntersection } from 'base/lang';
+import {
+  type ReadonlyRecord,
+  reduce,
+} from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
+  type LiteralTypeDef,
   type NullableTypeDef,
+  type RecordKey,
   type RecordTypeDef,
+  type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
   TypeDefType,
 } from 'base/type/definition';
-import {
-  type FlattenedOf,
-  prefixOf,
-} from 'base/type/flattened_of';
+import { prefixOf } from 'base/type/flattened_of';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
 
+type FlattenedValue<T extends TypeDef, P extends string> = {
+  readonly typePath: P,
+  readonly value: ValueTypeOf<T>,
+  readonly setValue?: (value: ValueTypeOf<T>) => void,
+};
+
+// causes typescript to infinitely recurse
+// export type FlattenedValuesOf<
+//   T extends TypeDef,
+//   Prefix extends string,
+//   F extends Record<string, TypeDef> = FlattenedOf<T, Prefix>,
+//   P extends string | number | symbol = PathsOf<T, Prefix, 'n'>,
+// > = Readonly<{
+//   [K in keyof F]: FlattenedValue<F[K], P>;
+// }>;
+
+type DefaultDepth = 21;
+
 export type FlattenedValuesOf<
-  T extends TypeDef,
+  F extends TypeDef,
+  ValuePrefix extends string = '',
+  TypePrefix extends string = ValuePrefix,
+  TypeSegmentOverride extends string = 'n',
+> = InternalFlattenedOf<F, ValuePrefix, TypePrefix, TypeSegmentOverride, DefaultDepth>;
+
+type InternalFlattenedOf<
+  F extends TypeDef,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+  NextDepth extends number = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20][Depth],
+> = NextDepth extends -1 ? {}
+  :
+    & InternalFlattenedOfChildren<F, ValuePrefix, TypePrefix, TypeSegmentOverride, NextDepth>
+    & ReadonlyRecord<ValuePrefix, FlattenedValue<F, TypePrefix>>;
+
+type InternalFlattenedOfChildren<
+  F extends TypeDef,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> = F extends LiteralTypeDef ? FlattenedOfLiteralChildren
+  : F extends NullableTypeDef ? FlattenedOfNullableChildren<
+      F,
+      ValuePrefix,
+      TypePrefix,
+      TypeSegmentOverride,
+      Depth
+    >
+  : F extends ListTypeDef ? FlattenedOfListChildren<
+      F,
+      ValuePrefix,
+      TypePrefix,
+      TypeSegmentOverride,
+      Depth
+    >
+  : F extends RecordTypeDef ? FlattenedOfRecordChildren<
+      F,
+      ValuePrefix,
+      TypePrefix,
+      TypeSegmentOverride,
+      Depth
+    >
+  : F extends DiscriminatingUnionTypeDef ? FlattenedOfDiscriminatingUnionChildren<
+      F,
+      ValuePrefix,
+      TypePrefix,
+      TypeSegmentOverride,
+      Depth
+    >
+  : never;
+
+type PrefixOf<
   Prefix extends string,
-  F extends Record<string, TypeDef> = FlattenedOf<T, Prefix>,
-  P extends string | number | symbol = FlattenedOf<T, Prefix, 'n'>,
-> = Readonly<{
-  [K in keyof F]: {
-    readonly typePath: P,
-    readonly value: ValueTypeOf<F[K]>,
-    readonly setValue?: (value: ValueTypeOf<F[K]>) => void,
+  Key extends RecordKey | symbol,
+> = Key extends RecordKey ? Prefix extends '' ? `${Key}`
+  : `${Prefix}.${Key}`
+  : never;
+
+type FlattenedOfLiteralChildren = {};
+
+type FlattenedOfNullableChildren<
+  F extends NullableTypeDef,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> = Partial<InternalFlattenedOfChildren<
+  F['nonNullableTypeDef'],
+  ValuePrefix,
+  TypePrefix,
+  TypeSegmentOverride,
+  Depth
+>>;
+
+type FlattenedOfListChildren<
+  F extends ListTypeDef,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> = InternalFlattenedOf<
+  F['elements'],
+  PrefixOf<
+    ValuePrefix,
+    number
+  >,
+  PrefixOf<
+    TypePrefix,
+    TypeSegmentOverride
+  >,
+  TypeSegmentOverride,
+  Depth
+>;
+
+type FlattenedOfRecordFieldGroup<
+  Fields extends Record<string, RecordTypeDefField>,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> =
+  // if it's empty, then iterating the fields returns never, not an empty set, so
+  // we need special handling for this
+  {} extends Fields ? {}
+    : UnionToIntersection<{
+      readonly [K in keyof Fields]: Fields[K]['optional'] extends true ? Partial<
+          InternalFlattenedOf<
+            Fields[K]['valueType'],
+            PrefixOf<ValuePrefix, K>,
+            PrefixOf<TypePrefix, K>,
+            TypeSegmentOverride,
+            Depth
+          >
+        >
+        : InternalFlattenedOf<
+          Fields[K]['valueType'],
+          PrefixOf<ValuePrefix, K>,
+          PrefixOf<TypePrefix, K>,
+          TypeSegmentOverride,
+          Depth
+        >;
+    }[keyof Fields]>;
+
+// type FlattenedOfRecordFields<
+//   F extends RecordTypeDefFields,
+//   ValuePrefix extends string,
+//   TypePrefix extends string,
+//   TypeSegmentOverride extends string,
+//   Depth extends number,
+// > = FlattenedOfRecordFieldGroup<
+//   F,
+//   ValuePrefix,
+//   TypePrefix,
+//   TypeSegmentOverride,
+//   Depth
+// >;
+
+type FlattenedOfRecordChildren<
+  F extends RecordTypeDef,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> = FlattenedOfRecordFieldGroup<
+  F['fields'],
+  ValuePrefix,
+  TypePrefix,
+  TypeSegmentOverride,
+  Depth
+>;
+
+type FlattenedOfDiscriminatingUnionChildren<
+  F extends DiscriminatingUnionTypeDef,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> =
+  & Partial<UnionToIntersection<
+    {
+      readonly [K in keyof F['unions']]: FlattenedOfRecordFieldGroup<
+        F['unions'][K],
+        PrefixOf<ValuePrefix, K>,
+        PrefixOf<TypePrefix, K>,
+        TypeSegmentOverride,
+        Depth
+      >;
+      // do not synthesize a type for PrefixOf<Prefix, K>
+      // & ReadonlyRecord<
+      //   PrefixOf<ValuePrefix, K>,
+      //   FlattenedValue<RecordTypeDef<F['unions'][K]>, PrefixOf<TypePrefix, K>>
+      // >;
+    }[keyof F['unions']]
+  >>
+  // include the discriminator
+  & {
+    readonly [K in PrefixOf<ValuePrefix, F['discriminator']>]: FlattenedValue<
+      LiteralTypeDef<keyof F['unions']>,
+      PrefixOf<TypePrefix, F['discriminator']>
+    >;
   };
-}>;
 
 type InternalFlattenedValues = Record<string, {
   readonly typePath: string,

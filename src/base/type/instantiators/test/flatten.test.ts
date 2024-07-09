@@ -6,10 +6,182 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
+  nullableRecordCoordinateTypeDef,
   recordTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { expectEquals } from 'testing/helpers';
+
+describe('FlattenedValuesOf', function () {
+  describe('literal', function () {
+    it('passes type checking', function () {
+      const t: FlattenedValuesOf<
+        typeof literalNumericTypeDef,
+        'n'
+      > = {
+        n: {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'n',
+        },
+      };
+      expect(t).toBeDefined();
+    });
+  });
+
+  describe('nullable', function () {
+    it('passes type checking', function () {
+      const t: FlattenedValuesOf<
+        typeof nullableRecordCoordinateTypeDef,
+        'b'
+      > = {
+        b: {
+          value: null,
+          setValue: vitest.fn(),
+          typePath: 'b',
+        },
+        'b.x': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'b.x',
+        },
+        'b.y': {
+          value: 2,
+          setValue: vitest.fn(),
+          typePath: 'b.y',
+        },
+      };
+
+      expect(t).toBeDefined();
+    });
+
+    it('passes type checking with missing child fields', function () {
+      const t: FlattenedValuesOf<
+        typeof nullableRecordCoordinateTypeDef,
+        'b'
+      > = {
+        b: {
+          value: null,
+          setValue: vitest.fn(),
+          typePath: 'b',
+        },
+      };
+      expect(t).toBeDefined();
+    });
+  });
+
+  describe('list', function () {
+    it('passes type checking', function () {
+      const t: FlattenedValuesOf<
+        typeof listTypeDef,
+        'l'
+      > = {
+        l: {
+          value: [],
+          setValue: vitest.fn(),
+          typePath: 'l',
+        },
+        'l.0': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'l.n',
+        },
+      };
+      expect(t).toBeDefined();
+    });
+  });
+
+  describe('record', function () {
+    it('passes type checking', function () {
+      const t: FlattenedValuesOf<
+        typeof recordTypeDef,
+        'r'
+      > = {
+        r: {
+          value: {
+            list: [],
+            literal: 1,
+          },
+          setValue: vitest.fn(),
+          typePath: 'r',
+        },
+        'r.list': {
+          value: [],
+          setValue: vitest.fn(),
+          typePath: 'r.list',
+        },
+        'r.literal': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'r.literal',
+        },
+      };
+      expect(t).toBeDefined();
+    });
+
+    it('passes type checking with missing optional fields', function () {
+      const t: FlattenedValuesOf<
+        typeof recordTypeDef,
+        'r'
+      > = {
+        r: {
+          value: {},
+          setValue: vitest.fn(),
+          typePath: 'r',
+        },
+      };
+      expect(t).toBeDefined();
+    });
+  });
+
+  describe('discriminating union', function () {
+    it('passes type checking', function () {
+      const t: FlattenedValuesOf<
+        typeof discriminatingUnionTypeDef,
+        'd'
+      > = {
+        d: {
+          value: {
+            disc: 'a',
+          },
+          setValue: vitest.fn(),
+          typePath: 'd',
+        },
+        'd.a.list': {
+          value: [],
+          setValue: vitest.fn(),
+          typePath: 'd.a.list',
+        },
+        'd.a.list.0': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'd.a.list.n',
+        },
+        'd.a.literal': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'd.a.literal',
+        },
+        'd.b.x': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'd.b.x',
+        },
+        'd.b.y': {
+          value: 1,
+          setValue: vitest.fn(),
+          typePath: 'd.b.y',
+        },
+        'd.disc': {
+          value: 'a',
+          setValue: vitest.fn(),
+          typePath: 'd.disc',
+        },
+      };
+      expect(t).toBeDefined();
+    });
+  });
+});
 
 describe('flatten', function () {
   describe('literal', function () {
@@ -20,6 +192,18 @@ describe('flatten', function () {
         l: {
           value,
           typePath: 'l',
+        },
+      });
+    });
+  });
+
+  describe('nullable', function () {
+    it('produces the expected result', function () {
+      const flattened = flatten(nullableRecordCoordinateTypeDef, null, 'n');
+      expect(flattened).toEqual({
+        n: {
+          value: null,
+          typePath: 'n',
         },
       });
     });
@@ -112,7 +296,7 @@ describe('flatten', function () {
     });
 
     it('sets the value', function () {
-      flattened['r.literal'].setValue?.(3);
+      flattened['r.literal']?.setValue?.(3);
       expect(r.literal).toBe(3);
     });
   });
@@ -165,7 +349,7 @@ describe('flatten', function () {
     });
 
     it('sets the value', function () {
-      flattened['d.a.literal'].setValue?.(100);
+      flattened['d.a.literal']?.setValue?.(100);
       expectEquals(d.disc, 'a');
       expect(d.literal).toBe(100);
     });
