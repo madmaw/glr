@@ -1,7 +1,7 @@
 import {
-  flatten,
   type FlattenedValuesOf,
-} from 'base/type/instantiators/flatten';
+  flattenValuesOf,
+} from 'base/type/flatten_values_of';
 import {
   discriminatingUnionTypeDef,
   listTypeDef,
@@ -183,11 +183,11 @@ describe('FlattenedValuesOf', function () {
   });
 });
 
-describe('flatten', function () {
+describe('flattenValuesOf', function () {
   describe('literal', function () {
     it('produces the expected result', function () {
       const value = 1;
-      const flattened = flatten(literalNumericTypeDef, value, 'l');
+      const flattened = flattenValuesOf(literalNumericTypeDef, value, 'l');
       expect(flattened).toEqual({
         l: {
           value,
@@ -199,7 +199,7 @@ describe('flatten', function () {
 
   describe('nullable', function () {
     it('produces the expected result', function () {
-      const flattened = flatten(nullableRecordCoordinateTypeDef, null, 'n');
+      const flattened = flattenValuesOf(nullableRecordCoordinateTypeDef, null, 'n');
       expect(flattened).toEqual({
         n: {
           value: null,
@@ -218,7 +218,7 @@ describe('flatten', function () {
         1,
         2,
       ];
-      flattened = flatten(
+      flattened = flattenValuesOf(
         listTypeDef,
         l,
         'l',
@@ -263,7 +263,7 @@ describe('flatten', function () {
         list: [1],
         literal: 2,
       };
-      flattened = flatten(
+      flattened = flattenValuesOf(
         recordTypeDef,
         r,
         'r',
@@ -310,7 +310,7 @@ describe('flatten', function () {
         disc: 'a',
         list: [0],
       };
-      flattened = flatten(
+      flattened = flattenValuesOf(
         discriminatingUnionTypeDef,
         d,
         'd',

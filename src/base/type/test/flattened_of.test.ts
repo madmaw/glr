@@ -1,7 +1,7 @@
 import {
   type FlattenedOf,
-  flattenedOf,
-} from 'base/type/flattened_of';
+  flattenTypesOf,
+} from 'base/type/flatten_types_of';
 import {
   discriminatingUnionDiscriminatorTypeDef,
   discriminatingUnionTypeDef,
@@ -174,14 +174,14 @@ describe('FlattenedOf', function () {
 
 describe('flattenedOf', function () {
   it('produces the expected literal', function () {
-    const flattened = flattenedOf(literalNumericTypeDef, 'l');
+    const flattened = flattenTypesOf(literalNumericTypeDef, 'l');
     expect(flattened).toEqual({
       l: literalNumericTypeDef,
     });
   });
 
   it('produces the expected nullable', function () {
-    const flattened = flattenedOf(nullableRecordCoordinateTypeDef, 'n');
+    const flattened = flattenTypesOf(nullableRecordCoordinateTypeDef, 'n');
     expect(flattened).toEqual({
       n: nullableRecordCoordinateTypeDef,
       'n.x': literalNumericTypeDef,
@@ -190,7 +190,7 @@ describe('flattenedOf', function () {
   });
 
   it('produces the expected list', function () {
-    const flattened = flattenedOf(listTypeDef, 'l');
+    const flattened = flattenTypesOf(listTypeDef, 'l');
     expect(flattened).toEqual({
       l: listTypeDef,
       'l.n': literalNumericTypeDef,
@@ -198,7 +198,7 @@ describe('flattenedOf', function () {
   });
 
   it('produces the expected record', function () {
-    const flattened = flattenedOf(recordTypeDef, 'r');
+    const flattened = flattenTypesOf(recordTypeDef, 'r');
     expect(flattened).toEqual({
       r: recordTypeDef,
       'r.literal': literalNumericTypeDef,
@@ -208,7 +208,7 @@ describe('flattenedOf', function () {
   });
 
   it('produces the expected discriminating union', function () {
-    const flattened = flattenedOf(discriminatingUnionTypeDef, 'd');
+    const flattened = flattenTypesOf(discriminatingUnionTypeDef, 'd');
     expect(flattened).toEqual({
       d: discriminatingUnionTypeDef,
       'd.disc': discriminatingUnionDiscriminatorTypeDef,

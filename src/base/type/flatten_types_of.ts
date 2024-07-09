@@ -9,13 +9,16 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordKey,
   type RecordTypeDef,
   type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
   TypeDefType,
 } from './definition';
+import {
+  type PrefixOf,
+  prefixOf,
+} from './prefix_of';
 
 type DefaultDepth = 21;
 
@@ -47,13 +50,6 @@ type InternalFlattenedOfChildren<
   : F extends RecordTypeDef ? FlattenedOfRecordChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends DiscriminatingUnionTypeDef
     ? FlattenedOfDiscriminatingUnionChildren<F, Prefix, VariableSegmentOverride, Depth>
-  : never;
-
-type PrefixOf<
-  Prefix extends string,
-  Key extends RecordKey | symbol,
-> = Key extends RecordKey ? Prefix extends '' ? `${Key}`
-  : `${Prefix}.${Key}`
   : never;
 
 type FlattenedOfLiteralChildren = {};
@@ -141,18 +137,14 @@ type FlattenedOfDiscriminatingUnionChildren<
     readonly [K in PrefixOf<Prefix, F['discriminator']>]: LiteralTypeDef<keyof F['unions']>;
   };
 
-export function prefixOf(prefix: string, postfix: string | number) {
-  return prefix === '' ? `${postfix}` : `${prefix}.${postfix}`;
-}
-
-export function flattenedOf<T extends TypeDef, Prefix extends string>(
+export function flattenTypesOf<T extends TypeDef, Prefix extends string>(
   t: T,
   prefix: Prefix,
 ): FlattenedOf<T, Prefix, 'n'> {
-  return flattenedOfWithOverride<T, Prefix, 'n'>(t, prefix, 'n');
+  return flattenTypesOfWithOverride<T, Prefix, 'n'>(t, prefix, 'n');
 }
 
-export function flattenedOfWithOverride<T extends TypeDef, Prefix extends string, Override extends string>(
+export function flattenTypesOfWithOverride<T extends TypeDef, Prefix extends string, Override extends string>(
   t: T,
   prefix: Prefix,
   override: Override,
@@ -213,7 +205,12 @@ function flattenedOfList(
   prefix: string,
   override: string,
 ): void {
-  flattenedOfInternal(acc, t.elements, prefixOf(prefix, override), override);
+  flattenedOfInternal(
+    acc,
+    t.elements,
+    prefixOf(prefix, override),
+    override,
+  );
 }
 
 function flattenedOfRecord(

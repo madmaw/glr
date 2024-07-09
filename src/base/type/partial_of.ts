@@ -12,7 +12,6 @@ import {
   TypeDefType,
 } from './definition';
 
-// TODO rename to `PartialOf`
 export type PartialOf<F extends TypeDef> = F extends LiteralTypeDef ? PartialOfLiteral<F>
   : F extends NullableTypeDef ? PartialOfNullable<F>
   : F extends ListTypeDef ? PartialOfList<F>

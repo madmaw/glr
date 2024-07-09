@@ -15,9 +15,9 @@ import {
   type TypeDef,
   TypeDefType,
 } from 'base/type/definition';
-import { prefixOf } from 'base/type/flattened_of';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
+import { prefixOf } from './prefix_of';
 
 type FlattenedValue<T extends TypeDef, P extends string> = {
   readonly typePath: P,
@@ -165,20 +165,6 @@ type FlattenedOfRecordFieldGroup<
         >;
     }[keyof Fields]>;
 
-// type FlattenedOfRecordFields<
-//   F extends RecordTypeDefFields,
-//   ValuePrefix extends string,
-//   TypePrefix extends string,
-//   TypeSegmentOverride extends string,
-//   Depth extends number,
-// > = FlattenedOfRecordFieldGroup<
-//   F,
-//   ValuePrefix,
-//   TypePrefix,
-//   TypeSegmentOverride,
-//   Depth
-// >;
-
 type FlattenedOfRecordChildren<
   F extends RecordTypeDef,
   ValuePrefix extends string,
@@ -230,7 +216,7 @@ type InternalFlattenedValues = Record<string, {
   readonly setValue?: (value: ValueTypeOf<TypeDef>) => void,
 }>;
 
-export function flatten<
+export function flattenValuesOf<
   T extends TypeDef,
   Prefix extends string,
 >(
