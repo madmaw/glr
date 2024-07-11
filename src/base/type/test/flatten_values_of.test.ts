@@ -1,5 +1,6 @@
 import {
   type FlattenedValuesOf,
+  flattenMutableValuesOf,
   flattenValuesOf,
 } from 'base/type/flatten_values_of';
 import {
@@ -10,13 +11,17 @@ import {
   recordTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
-import { expectEquals } from 'testing/helpers';
+import {
+  expectDefined,
+  expectEquals,
+} from 'testing/helpers';
 
 describe('FlattenedValuesOf', function () {
   describe('literal', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
         typeof literalNumericTypeDef,
+        true,
         'n'
       > = {
         n: {
@@ -33,6 +38,7 @@ describe('FlattenedValuesOf', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
         typeof nullableRecordCoordinateTypeDef,
+        true,
         'b'
       > = {
         b: {
@@ -58,6 +64,7 @@ describe('FlattenedValuesOf', function () {
     it('passes type checking with missing child fields', function () {
       const t: FlattenedValuesOf<
         typeof nullableRecordCoordinateTypeDef,
+        true,
         'b'
       > = {
         b: {
@@ -74,6 +81,7 @@ describe('FlattenedValuesOf', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
         typeof listTypeDef,
+        true,
         'l'
       > = {
         l: {
@@ -95,6 +103,7 @@ describe('FlattenedValuesOf', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
         typeof recordTypeDef,
+        true,
         'r'
       > = {
         r: {
@@ -122,6 +131,7 @@ describe('FlattenedValuesOf', function () {
     it('passes type checking with missing optional fields', function () {
       const t: FlattenedValuesOf<
         typeof recordTypeDef,
+        true,
         'r'
       > = {
         r: {
@@ -138,6 +148,7 @@ describe('FlattenedValuesOf', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
         typeof discriminatingUnionTypeDef,
+        true,
         'd'
       > = {
         d: {
@@ -174,7 +185,6 @@ describe('FlattenedValuesOf', function () {
         },
         'd.disc': {
           value: 'a',
-          setValue: vitest.fn(),
           typePath: 'd.disc',
         },
       };
@@ -208,17 +218,44 @@ describe('flattenValuesOf', function () {
       });
     });
   });
+});
+
+describe('flattenMutableValuesOf', function () {
+  describe('literal', function () {
+    it('produces the expected result', function () {
+      const value = 1;
+      const flattened = flattenMutableValuesOf(literalNumericTypeDef, value, 'l');
+      expect(flattened).toEqual({
+        l: {
+          value,
+          typePath: 'l',
+        },
+      });
+    });
+  });
+
+  describe('nullable', function () {
+    it('produces the expected result', function () {
+      const flattened = flattenMutableValuesOf(nullableRecordCoordinateTypeDef, null, 'n');
+      expect(flattened).toEqual({
+        n: {
+          value: null,
+          typePath: 'n',
+        },
+      });
+    });
+  });
 
   describe('list', function () {
     let l: ValueTypeOf<typeof listTypeDef>;
-    let flattened: FlattenedValuesOf<typeof listTypeDef, 'l'>;
+    let flattened: FlattenedValuesOf<typeof listTypeDef, true, 'l'>;
 
     beforeEach(function () {
       l = [
         1,
         2,
       ];
-      flattened = flattenValuesOf(
+      flattened = flattenMutableValuesOf(
         listTypeDef,
         l,
         'l',
@@ -246,7 +283,8 @@ describe('flattenValuesOf', function () {
     });
 
     it('sets the value', function () {
-      flattened['l.0'].setValue?.(3);
+      expectDefined(flattened['l.0'].setValue);
+      flattened['l.0'].setValue(3);
       expect(l).toEqual([
         3,
         2,
@@ -256,14 +294,14 @@ describe('flattenValuesOf', function () {
 
   describe('record', function () {
     let r: ValueTypeOf<typeof recordTypeDef>;
-    let flattened: FlattenedValuesOf<typeof recordTypeDef, 'r'>;
+    let flattened: FlattenedValuesOf<typeof recordTypeDef, true, 'r'>;
 
     beforeEach(function () {
       r = {
         list: [1],
         literal: 2,
       };
-      flattened = flattenValuesOf(
+      flattened = flattenMutableValuesOf(
         recordTypeDef,
         r,
         'r',
@@ -296,21 +334,22 @@ describe('flattenValuesOf', function () {
     });
 
     it('sets the value', function () {
-      flattened['r.literal']?.setValue?.(3);
+      expectDefined(flattened['r.literal']?.setValue);
+      flattened['r.literal'].setValue(3);
       expect(r.literal).toBe(3);
     });
   });
 
   describe('discriminating union', function () {
     let d: ValueTypeOf<typeof discriminatingUnionTypeDef>;
-    let flattened: FlattenedValuesOf<typeof discriminatingUnionTypeDef, 'd'>;
+    let flattened: FlattenedValuesOf<typeof discriminatingUnionTypeDef, true, 'd'>;
 
     beforeEach(function () {
       d = {
         disc: 'a',
         list: [0],
       };
-      flattened = flattenValuesOf(
+      flattened = flattenMutableValuesOf(
         discriminatingUnionTypeDef,
         d,
         'd',
@@ -349,7 +388,8 @@ describe('flattenValuesOf', function () {
     });
 
     it('sets the value', function () {
-      flattened['d.a.literal']?.setValue?.(100);
+      expectDefined(flattened['d.a.literal']?.setValue);
+      flattened['d.a.literal'].setValue(100);
       expectEquals(d.disc, 'a');
       expect(d.literal).toBe(100);
     });

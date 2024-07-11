@@ -8,7 +8,6 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordKey,
   type RecordTypeDef,
   type RecordTypeDefField,
   type RecordTypeDefFields,
@@ -17,12 +16,25 @@ import {
 } from 'base/type/definition';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
-import { prefixOf } from './prefix_of';
+import {
+  flattenMutableRecordOfValue,
+  flattenRecordOfValue,
+} from './flatten_record_of';
+import {
+  type PrefixOf,
+  prefixOf,
+} from './prefix_of';
+import { type ReadonlyOf } from './readonly_of';
+
+type MutableFlattenedValue<T extends TypeDef, P extends string> = {
+  readonly typePath: P,
+  readonly value: ValueTypeOf<T>,
+  readonly setValue?: (value: ValueTypeOf<T>) => void,
+};
 
 type FlattenedValue<T extends TypeDef, P extends string> = {
   readonly typePath: P,
   readonly value: ValueTypeOf<T>,
-  readonly setValue?: (value: ValueTypeOf<T>) => void,
 };
 
 // causes typescript to infinitely recurse
@@ -39,13 +51,22 @@ type DefaultDepth = 21;
 
 export type FlattenedValuesOf<
   F extends TypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string = '',
   TypePrefix extends string = ValuePrefix,
   TypeSegmentOverride extends string = 'n',
-> = InternalFlattenedOf<F, ValuePrefix, TypePrefix, TypeSegmentOverride, DefaultDepth>;
+> = InternalFlattenedOf<
+  F,
+  Mutable,
+  ValuePrefix,
+  TypePrefix,
+  TypeSegmentOverride,
+  DefaultDepth
+>;
 
 type InternalFlattenedOf<
   F extends TypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
@@ -53,11 +74,15 @@ type InternalFlattenedOf<
   NextDepth extends number = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20][Depth],
 > = NextDepth extends -1 ? {}
   :
-    & InternalFlattenedOfChildren<F, ValuePrefix, TypePrefix, TypeSegmentOverride, NextDepth>
-    & ReadonlyRecord<ValuePrefix, FlattenedValue<F, TypePrefix>>;
+    & InternalFlattenedOfChildren<F, Mutable, ValuePrefix, TypePrefix, TypeSegmentOverride, NextDepth>
+    & ReadonlyRecord<
+      ValuePrefix,
+      Mutable extends true ? MutableFlattenedValue<F, TypePrefix> : FlattenedValue<F, TypePrefix>
+    >;
 
 type InternalFlattenedOfChildren<
   F extends TypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
@@ -65,6 +90,7 @@ type InternalFlattenedOfChildren<
 > = F extends LiteralTypeDef ? FlattenedOfLiteralChildren
   : F extends NullableTypeDef ? FlattenedOfNullableChildren<
       F,
+      Mutable,
       ValuePrefix,
       TypePrefix,
       TypeSegmentOverride,
@@ -72,6 +98,7 @@ type InternalFlattenedOfChildren<
     >
   : F extends ListTypeDef ? FlattenedOfListChildren<
       F,
+      Mutable,
       ValuePrefix,
       TypePrefix,
       TypeSegmentOverride,
@@ -79,6 +106,7 @@ type InternalFlattenedOfChildren<
     >
   : F extends RecordTypeDef ? FlattenedOfRecordChildren<
       F,
+      Mutable,
       ValuePrefix,
       TypePrefix,
       TypeSegmentOverride,
@@ -86,6 +114,7 @@ type InternalFlattenedOfChildren<
     >
   : F extends DiscriminatingUnionTypeDef ? FlattenedOfDiscriminatingUnionChildren<
       F,
+      Mutable,
       ValuePrefix,
       TypePrefix,
       TypeSegmentOverride,
@@ -93,23 +122,18 @@ type InternalFlattenedOfChildren<
     >
   : never;
 
-type PrefixOf<
-  Prefix extends string,
-  Key extends RecordKey | symbol,
-> = Key extends RecordKey ? Prefix extends '' ? `${Key}`
-  : `${Prefix}.${Key}`
-  : never;
-
 type FlattenedOfLiteralChildren = {};
 
 type FlattenedOfNullableChildren<
   F extends NullableTypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
   Depth extends number,
 > = Partial<InternalFlattenedOfChildren<
   F['nonNullableTypeDef'],
+  Mutable,
   ValuePrefix,
   TypePrefix,
   TypeSegmentOverride,
@@ -118,12 +142,14 @@ type FlattenedOfNullableChildren<
 
 type FlattenedOfListChildren<
   F extends ListTypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
   Depth extends number,
 > = InternalFlattenedOf<
   F['elements'],
+  Mutable,
   PrefixOf<
     ValuePrefix,
     number
@@ -138,6 +164,7 @@ type FlattenedOfListChildren<
 
 type FlattenedOfRecordFieldGroup<
   Fields extends Record<string, RecordTypeDefField>,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
@@ -150,6 +177,7 @@ type FlattenedOfRecordFieldGroup<
       readonly [K in keyof Fields]: Fields[K]['optional'] extends true ? Partial<
           InternalFlattenedOf<
             Fields[K]['valueType'],
+            Mutable,
             PrefixOf<ValuePrefix, K>,
             PrefixOf<TypePrefix, K>,
             TypeSegmentOverride,
@@ -158,6 +186,7 @@ type FlattenedOfRecordFieldGroup<
         >
         : InternalFlattenedOf<
           Fields[K]['valueType'],
+          Mutable,
           PrefixOf<ValuePrefix, K>,
           PrefixOf<TypePrefix, K>,
           TypeSegmentOverride,
@@ -167,12 +196,14 @@ type FlattenedOfRecordFieldGroup<
 
 type FlattenedOfRecordChildren<
   F extends RecordTypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
   Depth extends number,
 > = FlattenedOfRecordFieldGroup<
   F['fields'],
+  Mutable,
   ValuePrefix,
   TypePrefix,
   TypeSegmentOverride,
@@ -181,6 +212,7 @@ type FlattenedOfRecordChildren<
 
 type FlattenedOfDiscriminatingUnionChildren<
   F extends DiscriminatingUnionTypeDef,
+  Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
@@ -190,6 +222,7 @@ type FlattenedOfDiscriminatingUnionChildren<
     {
       readonly [K in keyof F['unions']]: FlattenedOfRecordFieldGroup<
         F['unions'][K],
+        Mutable,
         PrefixOf<ValuePrefix, K>,
         PrefixOf<TypePrefix, K>,
         TypeSegmentOverride,
@@ -210,20 +243,76 @@ type FlattenedOfDiscriminatingUnionChildren<
     >;
   };
 
-type InternalFlattenedValues = Record<string, {
+type InternalFlattenedValue = {
   readonly typePath: string,
   readonly value: ValueTypeOf<TypeDef>,
   readonly setValue?: (value: ValueTypeOf<TypeDef>) => void,
-}>;
+};
+type InternalFlattenedValues = Record<string, InternalFlattenedValue>;
 
 export function flattenValuesOf<
   T extends TypeDef,
   Prefix extends string,
 >(
   def: T,
+  v: ValueTypeOf<ReadonlyOf<T>>,
+  prefix: Prefix,
+): FlattenedValuesOf<T, false, Prefix> {
+  // cast to type-safe value
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return flattenRecordOfValue<T, InternalFlattenedValue, Prefix>(
+    def,
+    v,
+    function (_def: T, _valuePath: string, typePath: string, value: ValueTypeOf<T>) {
+      return {
+        typePath,
+        value,
+      };
+    },
+    prefix,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) as any;
+}
+
+export function flattenMutableValuesOf<
+  T extends TypeDef,
+  Prefix extends string,
+>(
+  def: T,
   v: ValueTypeOf<T>,
   prefix: Prefix,
-): FlattenedValuesOf<T, Prefix> {
+): FlattenedValuesOf<T, true, Prefix> {
+  // cast to type-safe value
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return flattenMutableRecordOfValue<T, InternalFlattenedValue, Prefix>(
+    def,
+    v,
+    function (
+      _def: T,
+      _valuePath: string,
+      typePath: string,
+      value: ValueTypeOf<T>,
+      setValue: (value: ValueTypeOf<T>) => void,
+    ) {
+      return {
+        typePath,
+        value,
+        setValue,
+      };
+    },
+    prefix,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) as any;
+}
+
+export function flattenMutableValuesOf2<
+  T extends TypeDef,
+  Prefix extends string,
+>(
+  def: T,
+  v: ValueTypeOf<T>,
+  prefix: Prefix,
+): FlattenedValuesOf<T, true, Prefix> {
   const acc: InternalFlattenedValues = {};
   flattenInternal(acc, def, v, prefix, prefix, undefined);
   // cast to type-safe value

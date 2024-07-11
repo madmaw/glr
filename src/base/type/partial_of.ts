@@ -12,6 +12,8 @@ import {
   TypeDefType,
 } from './definition';
 
+// TODO make the top-level thing nullable if it not already nullable
+
 export type PartialOf<F extends TypeDef> = F extends LiteralTypeDef ? PartialOfLiteral<F>
   : F extends NullableTypeDef ? PartialOfNullable<F>
   : F extends ListTypeDef ? PartialOfList<F>
