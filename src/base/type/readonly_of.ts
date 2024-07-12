@@ -4,6 +4,8 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapKeyType,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeDefFields,
@@ -15,13 +17,14 @@ import {
 export type ReadonlyOf<F extends TypeDef> = F extends LiteralTypeDef ? ReadonlyOfLiteral<F>
   : F extends NullableTypeDef ? ReadonlyOfNullable<F>
   : F extends ListTypeDef ? ReadonlyOfList<F>
+  : F extends MapTypeDef ? ReadonlyOfMap<F>
   : F extends StructuredTypeDef ? ReadonlyOfStruct<F>
   : F extends DiscriminatingUnionTypeDef ? ReadonlyOfDiscriminatingUnion<F>
   : never;
 
 type ReadonlyOfLiteral<F extends LiteralTypeDef> = {
   readonly type: TypeDefType.Literal,
-  readonly value: F['value'],
+  readonly valuePrototype: F['valuePrototype'],
 };
 
 type ReadonlyOfNullable<F extends NullableTypeDef> = {
@@ -33,6 +36,14 @@ export type ReadonlyOfList<F extends ListTypeDef> = {
   readonly type: TypeDefType.List,
   readonly elements: ReadonlyOf<F['elements']>,
   readonly readonly: true,
+};
+
+type ReadonlyOfMap<F extends MapTypeDef> = {
+  readonly type: TypeDefType.Map,
+  readonly keyPrototype: F['keyPrototype'],
+  readonly valueType: ReadonlyOf<F['valueType']>,
+  readonly readonly: true,
+  readonly partial: F['partial'],
 };
 
 type ReadonlyOfStructField<
@@ -72,6 +83,10 @@ export function readonlyOf<T extends TypeDef>(t: T): ReadonlyOf<T> {
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       return readonlyOfList(t) as ReadonlyOf<T>;
+    case TypeDefType.Map:
+      // converting the implicit any's back causes problems
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      return readonlyOfMap(t) as ReadonlyOf<T>;
     case TypeDefType.Structured:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -86,11 +101,11 @@ export function readonlyOf<T extends TypeDef>(t: T): ReadonlyOf<T> {
 }
 
 function readonlyOfLiteral<T extends LiteralTypeDef>({
-  value,
+  valuePrototype,
 }: T): ReadonlyOfLiteral<T> {
   return {
     type: TypeDefType.Literal,
-    value,
+    valuePrototype,
   };
 }
 
@@ -111,6 +126,20 @@ function readonlyOfList<E extends TypeDef, T extends ListTypeDef<E>>({
     type: TypeDefType.List,
     elements: readonlyOf(elements),
     readonly: true,
+  };
+}
+
+function readonlyOfMap<K extends MapKeyType, V extends TypeDef, T extends MapTypeDef<K, V>>({
+  keyPrototype,
+  valueType,
+  partial,
+}: T): ReadonlyOfMap<T> {
+  return {
+    type: TypeDefType.Map,
+    keyPrototype,
+    valueType: readonlyOf(valueType),
+    readonly: true,
+    partial,
   };
 }
 

@@ -7,6 +7,7 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
+  mapTypeDef,
   structuredTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
@@ -48,28 +49,58 @@ describe('freeze', function () {
     });
   });
 
+  describe('map', function () {
+    let map: ValueTypeOf<ReadonlyOf<typeof mapTypeDef>>;
+    const input: ValueTypeOf<ReadonlyOf<typeof mapTypeDef>> = {
+      a: {
+        x: 1,
+        y: 2,
+      },
+      b: {
+        x: 2,
+        y: 3,
+      },
+    };
+
+    beforeEach(function () {
+      map = instantiateFrozen(mapTypeDef, input);
+    });
+
+    it('keeps the value', function () {
+      expect(map).toEqual(input);
+    });
+
+    it('is frozen', function () {
+      expect(function () {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        (map as any)['a'] = input.b;
+      }).toThrow();
+      expect(map).toEqual(input);
+    });
+  });
+
   describe('structured', function () {
-    let record: ValueTypeOf<ReadonlyOf<typeof structuredTypeDef>>;
+    let struct: ValueTypeOf<ReadonlyOf<typeof structuredTypeDef>>;
     const input: ValueTypeOf<typeof structuredTypeDef> = {
       list: undefined,
       literal: 1,
     };
 
     beforeEach(function () {
-      record = instantiateFrozen(readonlyOf(structuredTypeDef), input);
+      struct = instantiateFrozen(readonlyOf(structuredTypeDef), input);
     });
 
     it('keeps the value', function () {
-      expect(record).toEqual(input);
+      expect(struct).toEqual(input);
     });
 
     it('is frozen', function () {
       expect(function () {
         // cast it back to being mutable so we can illegally modify it
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        (record as ValueTypeOf<typeof structuredTypeDef>).literal = 1;
+        (struct as ValueTypeOf<typeof structuredTypeDef>).literal = 1;
       }).toThrow();
-      expect(record).toEqual(input);
+      expect(struct).toEqual(input);
     });
   });
 

@@ -9,6 +9,7 @@ import {
   listTypeDef,
   literalComplexTypeDef,
   literalNumericTypeDef,
+  mapTypeDef,
   structuredTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
@@ -153,8 +154,76 @@ describe('instantiateMobxObservable', function () {
     });
   });
 
+  describe('map', function () {
+    let map: ValueTypeOf<typeof mapTypeDef>;
+    const input: ValueTypeOf<ReadonlyOf<typeof mapTypeDef>> = {
+      a: {
+        x: 1,
+        y: 2,
+      },
+      b: {
+        x: 2,
+        y: 3,
+      },
+    };
+
+    beforeEach(function () {
+      map = instantiateMobxObservable(mapTypeDef, input);
+    });
+
+    it('instantiates', function () {
+      expect(map).toEqual(input);
+    });
+
+    describe('observing changes', function () {
+      let ax: number;
+      let disposer: IReactionDisposer | undefined;
+
+      beforeEach(function () {
+        disposer = reaction(
+          function () {
+            return map.a.x;
+          },
+          function (x: number) {
+            ax = x;
+          },
+          {
+            fireImmediately: true,
+          },
+        );
+
+        expect(ax).toBe(1);
+        runInAction(function () {
+          map.a = {
+            x: 100,
+            y: 101,
+          };
+        });
+      });
+
+      afterEach(function () {
+        disposer?.();
+      });
+
+      it('updated', function () {
+        expect(map.a).toEqual({
+          x: 100,
+          y: 101,
+        });
+      });
+
+      it('calls the reaction', function () {
+        expect(ax).toBe(100);
+      });
+
+      it('does not change the input', function () {
+        expect(input.a.x).toBe(1);
+      });
+    });
+  });
+
   describe('structured', function () {
-    let record: ValueTypeOf<typeof structuredTypeDef>;
+    let struct: ValueTypeOf<typeof structuredTypeDef>;
     const input: ValueTypeOf<ReadonlyOf<typeof structuredTypeDef>> = {
       list: [
         1,
@@ -165,11 +234,11 @@ describe('instantiateMobxObservable', function () {
     };
 
     beforeEach(function () {
-      record = instantiateMobxObservable(structuredTypeDef, input);
+      struct = instantiateMobxObservable(structuredTypeDef, input);
     });
 
     it('instantiates', function () {
-      expect(record).toEqual(input);
+      expect(struct).toEqual(input);
     });
 
     describe('observing direct changes', function () {
@@ -179,7 +248,7 @@ describe('instantiateMobxObservable', function () {
       beforeEach(function () {
         disposer = reaction(
           function () {
-            return record.literal;
+            return struct.literal;
           },
           function (newLiteral: number | undefined) {
             literalField = newLiteral;
@@ -190,7 +259,7 @@ describe('instantiateMobxObservable', function () {
         );
         expect(literalField).toBe(1);
         runInAction(function () {
-          record.literal = 2;
+          struct.literal = 2;
         });
       });
 
@@ -203,7 +272,7 @@ describe('instantiateMobxObservable', function () {
       });
 
       it('updates the literal field', function () {
-        expect(record).toEqual({
+        expect(struct).toEqual({
           list: [
             1,
             2,
@@ -221,7 +290,7 @@ describe('instantiateMobxObservable', function () {
       beforeEach(function () {
         disposer = reaction(
           function () {
-            return record.list?.length;
+            return struct.list?.length;
           },
           function (newLength: number | undefined) {
             listFieldLength = newLength;
@@ -232,7 +301,7 @@ describe('instantiateMobxObservable', function () {
         );
         expect(listFieldLength).toBe(3);
         runInAction(function () {
-          record.list?.push(4);
+          struct.list?.push(4);
         });
       });
 
@@ -245,7 +314,7 @@ describe('instantiateMobxObservable', function () {
       });
 
       it('updates the list field', function () {
-        expect(record).toEqual({
+        expect(struct).toEqual({
           list: [
             1,
             2,
@@ -259,10 +328,10 @@ describe('instantiateMobxObservable', function () {
       it('reports reassignment of the field', function () {
         const list = instantiateMobxObservable(listTypeDef, [1]);
         runInAction(function () {
-          record.list = list;
+          struct.list = list;
         });
         expect(listFieldLength).toBe(1);
-        expect(record).toEqual({
+        expect(struct).toEqual({
           list: [1],
           literal: 1,
         });

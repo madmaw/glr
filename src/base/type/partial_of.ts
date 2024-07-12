@@ -4,6 +4,8 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapKeyType,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeDefFields,
@@ -17,13 +19,14 @@ import {
 export type PartialOf<F extends TypeDef> = F extends LiteralTypeDef ? PartialOfLiteral<F>
   : F extends NullableTypeDef ? PartialOfNullable<F>
   : F extends ListTypeDef ? PartialOfList<F>
+  : F extends MapTypeDef ? PartialOfMap<F>
   : F extends StructuredTypeDef ? PartialOfStruct<F>
   : F extends DiscriminatingUnionTypeDef ? PartialOfDiscriminatingUnion<F>
   : never;
 
 type PartialOfLiteral<F extends LiteralTypeDef> = {
   type: TypeDefType.Literal,
-  value: F['value'] | undefined,
+  valuePrototype: F['valuePrototype'] | undefined,
 };
 
 type PartialOfNullable<F extends NullableTypeDef> = {
@@ -36,6 +39,14 @@ type PartialOfList<F extends ListTypeDef> = {
   // TODO are lists of potentially undefined values appealing here?
   elements: PartialOf<F['elements']>,
   readonly: F['readonly'],
+};
+
+type PartialOfMap<F extends MapTypeDef> = {
+  type: TypeDefType.Map,
+  keyPrototype: F['keyPrototype'],
+  valueType: F['valueType'],
+  readonly: F['readonly'],
+  partial: true,
 };
 
 type PartialOfStructField<
@@ -76,6 +87,10 @@ export function partialOf<T extends TypeDef>(t: T): PartialOf<T> {
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       return partialOfList(t) as PartialOf<T>;
+    case TypeDefType.Map:
+      // converting the implicit any's back causes problems
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      return partialOfMap(t) as PartialOf<T>;
     case TypeDefType.Structured:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -92,7 +107,7 @@ export function partialOf<T extends TypeDef>(t: T): PartialOf<T> {
 function partialOfLiteral<T extends LiteralTypeDef>(_t: T): PartialOfLiteral<T> {
   return {
     type: TypeDefType.Literal,
-    value: undefined,
+    valuePrototype: undefined,
   };
 }
 
@@ -113,6 +128,20 @@ function partialOfList<E extends TypeDef, T extends ListTypeDef<E>>({
     type: TypeDefType.List,
     elements: partialOf(elements),
     readonly,
+  };
+}
+
+function partialOfMap<K extends MapKeyType, V extends TypeDef, T extends MapTypeDef<K, V>>({
+  keyPrototype,
+  valueType,
+  readonly,
+}: T): PartialOfMap<T> {
+  return {
+    type: TypeDefType.Map,
+    keyPrototype,
+    valueType,
+    readonly,
+    partial: true,
   };
 }
 

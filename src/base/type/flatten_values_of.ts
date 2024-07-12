@@ -4,6 +4,7 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeField,
@@ -95,6 +96,14 @@ type InternalFlattenedOfChildren<
       TypeSegmentOverride,
       Depth
     >
+  : F extends MapTypeDef ? FlattenedOfMapChildren<
+      F,
+      Mutable,
+      ValuePrefix,
+      TypePrefix,
+      TypeSegmentOverride,
+      Depth
+    >
   : F extends StructuredTypeDef ? FlattenedOfStructChildren<
       F,
       Mutable,
@@ -144,6 +153,28 @@ type FlattenedOfListChildren<
   PrefixOf<
     ValuePrefix,
     number
+  >,
+  PrefixOf<
+    TypePrefix,
+    TypeSegmentOverride
+  >,
+  TypeSegmentOverride,
+  Depth
+>;
+
+type FlattenedOfMapChildren<
+  F extends MapTypeDef,
+  Mutable extends boolean,
+  ValuePrefix extends string,
+  TypePrefix extends string,
+  TypeSegmentOverride extends string,
+  Depth extends number,
+> = InternalFlattenedOf<
+  F['valueType'],
+  Mutable,
+  PrefixOf<
+    ValuePrefix,
+    F['keyPrototype']
   >,
   PrefixOf<
     TypePrefix,

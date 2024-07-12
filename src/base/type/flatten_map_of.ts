@@ -4,6 +4,8 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapKeyType,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeDefFields,
@@ -80,6 +82,13 @@ type InternalFlattenedOfChildren<
       SegmentOverride,
       Depth
     >
+  : F extends MapTypeDef ? FlattenedOfMapChildren<
+      F,
+      R,
+      Prefix,
+      SegmentOverride,
+      Depth
+    >
   : F extends StructuredTypeDef ? FlattenedOfStructChildren<
       F,
       R,
@@ -129,6 +138,20 @@ type FlattenedOfListChildren<
     Prefix,
     SegmentOverride extends undefined ? number : SegmentOverride
   >,
+  SegmentOverride,
+  Depth
+>;
+
+type FlattenedOfMapChildren<
+  F extends MapTypeDef,
+  R,
+  Prefix extends string,
+  SegmentOverride extends string | undefined,
+  Depth extends number,
+> = InternalFlattenedOf<
+  F['valueType'],
+  R,
+  PrefixOf<Prefix, SegmentOverride extends undefined ? F['keyPrototype'] : SegmentOverride>,
   SegmentOverride,
   Depth
 >;
@@ -321,6 +344,8 @@ function flattenChildValues(
       return flattenNullableValue(acc, def, value, f, valuePath, typePath);
     case TypeDefType.List:
       return flattenListValue(acc, def, value, f, valuePath, typePath);
+    case TypeDefType.Map:
+      return flattenMapValue(acc, def, value, f, valuePath, typePath);
     case TypeDefType.Structured:
       return flattenStructValue(acc, def, value, f, valuePath, typePath);
     case TypeDefType.DiscriminatingUnion:
@@ -359,15 +384,14 @@ function flattenNullableValue(
 
 function flattenListValue(
   acc: InternalFlattenedValues,
-  def: ListTypeDef,
+  {
+    elements,
+  }: ListTypeDef,
   value: ValueTypeOf<ListTypeDef>,
   f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ): InternalFlattenedValues {
-  const {
-    elements,
-  } = def;
   const elementTypePath = prefixOf(typePath, 'n');
   return value.reduce(
     function (
@@ -387,6 +411,43 @@ function flattenListValue(
         f,
         elementValuePath,
         elementTypePath,
+      );
+    },
+    acc,
+  );
+}
+
+function flattenMapValue(
+  acc: InternalFlattenedValues,
+  {
+    valueType,
+  }: MapTypeDef,
+  value: ValueTypeOf<MapTypeDef>,
+  f: InternalValueMapper,
+  valuePath: string,
+  typePath: string,
+): InternalFlattenedValues {
+  const entryTypePath = prefixOf(typePath, 'n');
+  return reduce(
+    value,
+    function (
+      acc,
+      key: MapKeyType,
+      entryValue: ValueTypeOf<TypeDef>,
+    ) {
+      const entryValuePath = prefixOf(valuePath, key);
+      const setEntryValue = function (item: ValueTypeOf<TypeDef>) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+        (value as any)[key] = item;
+      };
+      return flattenValueInternal(
+        acc,
+        valueType,
+        entryValue,
+        setEntryValue,
+        f,
+        entryValuePath,
+        entryTypePath,
       );
     },
     acc,
@@ -464,7 +525,7 @@ function flattenDiscriminatingUnionValue(
   acc[discriminatorValuePath] = f(
     {
       type: TypeDefType.Literal,
-      value: undefined,
+      valuePrototype: undefined,
     },
     discriminatorValuePath,
     discriminatorTypePath,
@@ -547,6 +608,8 @@ function flattenChildTypes(
       return flattenNullableType(acc, def, f, path, segmentOverride);
     case TypeDefType.List:
       return flattenListType(acc, def, f, path, segmentOverride);
+    case TypeDefType.Map:
+      return flattenMapType(acc, def, f, path, segmentOverride);
     case TypeDefType.Structured:
       return flattenStructType(acc, def, f, path, segmentOverride);
     case TypeDefType.DiscriminatingUnion:
@@ -582,6 +645,18 @@ function flattenListType(
   segmentOverride: string,
 ): InternalFlattenedTypes {
   return flattenTypeInternal(acc, elements, f, prefixOf(path, segmentOverride), segmentOverride);
+}
+
+function flattenMapType(
+  acc: InternalFlattenedTypes,
+  {
+    valueType,
+  }: MapTypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  return flattenTypeInternal(acc, valueType, f, prefixOf(path, segmentOverride), segmentOverride);
 }
 
 function flattenStructType(

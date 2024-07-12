@@ -2,6 +2,8 @@ import { forEach } from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
+  type MapKeyType,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeDefFields,
@@ -47,6 +49,8 @@ function becomeInternal<T extends TypeDef>(
       return becomeNullable(def, instantiator, target, prototype);
     case TypeDefType.List:
       return becomeList(def, instantiator, target, prototype);
+    case TypeDefType.Map:
+      return becomeMap(def, instantiator, target, prototype);
     case TypeDefType.Structured:
       return becomeStruct(def, instantiator, target, prototype);
     case TypeDefType.DiscriminatingUnion:
@@ -102,6 +106,40 @@ function becomeList(
     // remove any trailing elements
     target.splice(prototype.length, target.length - prototype.length);
   }
+  return target;
+}
+
+function becomeMap(
+  {
+    valueType,
+  }: MapTypeDef,
+  instantiator: InternalInstantiator,
+  target: ValueTypeOf<MapTypeDef>,
+  prototype: ValueTypeOf<ReadonlyOf<MapTypeDef>>,
+): ValueTypeOf<MapTypeDef> {
+  forEach(
+    target,
+    function (key: MapKeyType, targetValue) {
+      const prototypeValue = prototype[key];
+      if (prototypeValue === undefined) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        delete (target as any)[key];
+      } else {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        (target as any)[key] = becomeInternal(valueType, instantiator, targetValue, prototypeValue);
+      }
+    },
+  );
+  forEach(
+    prototype,
+    function (key: MapKeyType, prototypeValue) {
+      const targetValue = target[key];
+      if (targetValue === undefined) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        (target as any)[key] = instantiator(valueType, prototypeValue);
+      }
+    },
+  );
   return target;
 }
 

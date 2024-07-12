@@ -4,6 +4,7 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeDefFields,
@@ -15,10 +16,10 @@ import { type PrefixOf } from './prefix_of';
 
 type DefaultDepth = 21;
 
-export type FlattenedOf<
+export type FlattenedTypesOf<
   F extends TypeDef,
   Prefix extends string = '',
-  VariableSegmentOverride extends string | undefined = undefined,
+  VariableSegmentOverride extends string = 'n',
 > = InternalFlattenedOf<F, Prefix, VariableSegmentOverride, DefaultDepth>;
 
 type InternalFlattenedOf<
@@ -40,6 +41,7 @@ type InternalFlattenedOfChildren<
 > = F extends LiteralTypeDef ? FlattenedOfLiteralChildren
   : F extends NullableTypeDef ? FlattenedOfNullableChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends ListTypeDef ? FlattenedOfListChildren<F, Prefix, VariableSegmentOverride, Depth>
+  : F extends MapTypeDef ? FlattenedOfMapChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends StructuredTypeDef ? FlattenedOfStructChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends DiscriminatingUnionTypeDef
     ? FlattenedOfDiscriminatingUnionChildren<F, Prefix, VariableSegmentOverride, Depth>
@@ -64,6 +66,21 @@ type FlattenedOfListChildren<
   PrefixOf<
     Prefix,
     VariableSegmentOverride extends undefined ? number : VariableSegmentOverride
+  >,
+  VariableSegmentOverride,
+  Depth
+>;
+
+type FlattenedOfMapChildren<
+  F extends MapTypeDef,
+  Prefix extends string,
+  VariableSegmentOverride extends string | undefined,
+  Depth extends number,
+> = InternalFlattenedOf<
+  F['valueType'],
+  PrefixOf<
+    Prefix,
+    VariableSegmentOverride extends undefined ? F['keyPrototype'] : VariableSegmentOverride
   >,
   VariableSegmentOverride,
   Depth
@@ -133,7 +150,7 @@ type FlattenedOfDiscriminatingUnionChildren<
 export function flattenTypesOf<T extends TypeDef, Prefix extends string>(
   t: T,
   prefix: Prefix,
-): FlattenedOf<T, Prefix, 'n'> {
+): FlattenedTypesOf<T, Prefix, 'n'> {
   return flattenTypesOfWithOverride<T, Prefix, 'n'>(t, prefix, 'n');
 }
 
@@ -141,7 +158,7 @@ export function flattenTypesOfWithOverride<T extends TypeDef, Prefix extends str
   t: T,
   prefix: Prefix,
   override: Override,
-): FlattenedOf<T, Prefix, Override> {
+): FlattenedTypesOf<T, Prefix, Override> {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return flattenMapOfType<T, TypeDef, Prefix, Override>(
     t,

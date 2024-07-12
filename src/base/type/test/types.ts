@@ -2,6 +2,7 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeField,
@@ -10,12 +11,12 @@ import {
 
 export const literalNumericTypeDef: LiteralTypeDef<number> = {
   type: TypeDefType.Literal,
-  value: undefined!,
+  valuePrototype: undefined!,
 };
 
 export const literalComplexTypeDef: LiteralTypeDef<{ a: string }> = {
   type: TypeDefType.Literal,
-  value: undefined!,
+  valuePrototype: undefined!,
 };
 
 export const listTypeDef: ListTypeDef<typeof literalNumericTypeDef> = {
@@ -62,6 +63,14 @@ export const structuredCoordinateTypeDef: StructuredTypeDef<{
   },
 };
 
+export const mapTypeDef: MapTypeDef<'a' | 'b', typeof structuredCoordinateTypeDef, false, false> = {
+  type: TypeDefType.Map,
+  keyPrototype: undefined!,
+  readonly: false,
+  partial: false,
+  valueType: structuredCoordinateTypeDef,
+};
+
 export const discriminatingUnionTypeDef: DiscriminatingUnionTypeDef<'disc', {
   a: typeof structuredTypeDef.fields,
   b: typeof structuredCoordinateTypeDef.fields,
@@ -76,7 +85,7 @@ export const discriminatingUnionTypeDef: DiscriminatingUnionTypeDef<'disc', {
 
 export const discriminatingUnionDiscriminatorTypeDef: LiteralTypeDef<'a' | 'b'> = {
   type: TypeDefType.Literal,
-  value: undefined!,
+  valuePrototype: undefined!,
 };
 
 export const nullableStructuredCoordinateTypeDef: NullableTypeDef<typeof structuredCoordinateTypeDef> = {

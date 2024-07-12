@@ -1,7 +1,12 @@
 import {
+  type MaybePartial,
+  type MaybeReadonly,
+} from 'base/lang';
+import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type LiteralTypeDef,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredTypeDef,
   type StructuredTypeDefFields,
@@ -25,11 +30,12 @@ type InternalValueTypeOf<
   : F extends LiteralTypeDef ? ValueTypeOfLiteral<F>
   : F extends NullableTypeDef ? ValueTypeOfNullable<F, Extra, NextDepth>
   : F extends ListTypeDef ? InternalValueTypeOfList<F, Extra, NextDepth>
+  : F extends MapTypeDef ? InternalValueTypeOfMap<F, Extra, NextDepth>
   : F extends StructuredTypeDef ? InternalValueTypeOfStruct<F, Extra, NextDepth>
   : F extends DiscriminatingUnionTypeDef ? InternalValueTypeOfDiscriminatingUnion<F, Extra, NextDepth>
   : never;
 
-type ValueTypeOfLiteral<F extends LiteralTypeDef> = F['value'];
+type ValueTypeOfLiteral<F extends LiteralTypeDef> = F['valuePrototype'];
 
 type ValueTypeOfNullable<
   F extends NullableTypeDef,
@@ -62,6 +68,22 @@ type ReadonlyValueTypesOfFields<F extends StructuredTypeDefFields> = {
 type ReadonlyOptionalValueTypesOfFields<F extends StructuredTypeDefFields> = {
   readonly [K in keyof F as F[K] extends StructuredTypeField<TypeDef, true, true> ? K : never]: F[K]['valueType'];
 };
+
+type InternalValueTypeOfMap<
+  F extends MapTypeDef,
+  Extra,
+  Depth extends number,
+> = MaybePartial<MaybeReadonly<
+  Record<
+    F['keyPrototype'],
+    InternalValueTypeOf<
+      F['valueType'],
+      Extra,
+      Depth
+    >
+  >,
+  F['readonly']
+>, F['partial']>;
 
 export type ValueTypeOfStruct<
   F extends StructuredTypeDef,

@@ -40,7 +40,21 @@ function observeValue<T extends TypeDef>(
       } else {
         return v;
       }
+    case TypeDefType.Map:
+      if (!def.readonly) {
+        // make observable observes all fields
+        return observable(
+          v,
+          {},
+          {
+            deep: false,
+          },
+        );
+      } else {
+        return v;
+      }
     case TypeDefType.Structured:
+      // `makeObservable` only observes the specified props
       return makeObservable(
         v,
         reduce(
@@ -59,6 +73,7 @@ function observeValue<T extends TypeDef>(
         },
       );
     case TypeDefType.DiscriminatingUnion:
+      // `makeObservable` only observes the specified props
       return makeObservable(
         v,
         reduce(

@@ -1,7 +1,11 @@
-import { reduce } from 'base/record';
+import {
+  map,
+  reduce,
+} from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
+  type MapTypeDef,
   type NullableTypeDef,
   type StructuredFieldKey,
   type StructuredTypeDef,
@@ -31,7 +35,7 @@ function passThroughModifier<T extends TypeDef>(v: ValueTypeOf<T>) {
 function instantiate<T extends TypeDef, R extends (ValueTypeOf<ReadonlyOf<T>> | ValueTypeOf<T>)>(
   def: T,
   value: ValueTypeOf<ReadonlyOf<T>>,
-  modifier: Modifier<ValueTypeOf<T>, R> = passThroughModifier<T>,
+  modifier: Modifier<ValueTypeOf<TypeDef>, R> = passThroughModifier<T>,
 ): R {
   switch (def.type) {
     case TypeDefType.Literal:
@@ -48,6 +52,12 @@ function instantiate<T extends TypeDef, R extends (ValueTypeOf<ReadonlyOf<T>> | 
       );
     case TypeDefType.List:
       return instantiateList(
+        def,
+        value,
+        modifier,
+      );
+    case TypeDefType.Map:
+      return instantiateMap(
         def,
         value,
         modifier,
@@ -92,14 +102,14 @@ function instantiateNullable<
   modifier: Modifier<ValueTypeOf<T>, R>,
 ): R {
   const {
-    nonNullableTypeDef: valueType,
+    nonNullableTypeDef,
   } = def;
   if (value == null) {
     // mutable and immutable null should be the same type
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     return modifier(null as ValueTypeOf<T>, def);
   }
-  return instantiate(valueType, value, modifier);
+  return instantiate(nonNullableTypeDef, value, modifier);
 }
 
 function instantiateList<
@@ -116,9 +126,37 @@ function instantiateList<
   const list = arr.map(function (value) {
     return instantiate(elements, value);
   });
-  // TODO: work out a way of maintaining the list type instead of casting
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return modifier(list as ValueTypeOf<T>, def);
+  return modifier(
+    // TODO: work out a way of maintaining the list type instead of casting
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    list as ValueTypeOf<T>,
+    def,
+  );
+}
+
+function instantiateMap<
+  T extends TypeDef,
+  R extends (ValueTypeOf<ReadonlyOf<T>> | ValueTypeOf<T>),
+>(
+  def: MapTypeDef,
+  value: ValueTypeOf<ReadonlyOf<T>>,
+  modifier: Modifier<ValueTypeOf<T>, R>,
+): R {
+  const {
+    valueType,
+  } = def;
+  const record = map(
+    value,
+    function (_key, value) {
+      return instantiate(valueType, value);
+    },
+  );
+  return modifier(
+    // TODO: work out a way of maintaining the list type instead of casting
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    record as ValueTypeOf<T>,
+    def,
+  );
 }
 
 function instantiateStructFields<

@@ -4,6 +4,7 @@ export const enum TypeDefType {
   Literal = 1,
   Nullable,
   List,
+  Map,
   Structured,
   DiscriminatingUnion,
 }
@@ -12,6 +13,7 @@ export type TypeDef =
   | LiteralTypeDef
   | NullableTypeDef
   | ListTypeDef
+  | MapTypeDef
   | StructuredTypeDef
   | DiscriminatingUnionTypeDef;
 
@@ -21,7 +23,7 @@ export type TypeDef =
 export type LiteralTypeDef<V = any> = {
   readonly type: TypeDefType.Literal,
   // never actually populate
-  readonly value: V,
+  readonly valuePrototype: V,
 };
 
 // nullable
@@ -43,6 +45,26 @@ export type ListTypeDef<E extends TypeDef = any, Readonly extends boolean = bool
   readonly type: TypeDefType.List,
   readonly elements: E,
   readonly readonly: Readonly,
+};
+
+// map
+
+export type MapKeyType = string | number;
+
+export type MapTypeDef<
+  K extends MapKeyType = MapKeyType,
+  // avoid circular ref by defaulting to `any`
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  V extends TypeDef = any,
+  Readonly extends boolean = boolean,
+  Partial extends boolean = boolean,
+> = {
+  readonly type: TypeDefType.Map,
+  // never actually populate
+  readonly keyPrototype: K,
+  readonly valueType: V,
+  readonly readonly: Readonly,
+  readonly partial: Partial,
 };
 
 // structured type

@@ -22,7 +22,7 @@ import { type ValueTypeOf } from './value_type_of';
 export function literal<T>(): LiteralTypeDefBuilder<T> {
   return new LiteralTypeDefBuilder({
     type: TypeDefType.Literal,
-    value: undefined!,
+    valuePrototype: undefined!,
   });
 }
 

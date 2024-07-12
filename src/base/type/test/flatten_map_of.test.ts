@@ -1,3 +1,4 @@
+import { type ReadonlyRecord } from 'base/record';
 import { type TypeDef } from 'base/type/definition';
 import {
   type FlattenedMapOf,
@@ -11,6 +12,7 @@ import {
   type discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
+  mapTypeDef,
   nullableStructuredCoordinateTypeDef,
   structuredTypeDef,
 } from './types';
@@ -91,6 +93,42 @@ describe('FlattenedMapOf', function () {
       > = {
         l: true,
         'l.n': true,
+      };
+      expect(t).toBeDefined();
+    });
+  });
+
+  describe('map', function () {
+    it('passes type checking', function () {
+      const t: FlattenedMapOf<
+        typeof mapTypeDef,
+        boolean,
+        'm'
+      > = {
+        m: true,
+        'm.a': true,
+        'm.a.x': true,
+        'm.a.y': true,
+        'm.b': true,
+        'm.b.x': true,
+        'm.b.y': true,
+        // error
+        // 'm.c': true,
+      };
+      expect(t).toBeDefined();
+    });
+
+    it('passes type checking with override', function () {
+      const t: FlattenedMapOf<
+        typeof mapTypeDef,
+        boolean,
+        'm',
+        'n'
+      > = {
+        m: true,
+        'm.n': true,
+        'm.n.x': true,
+        'm.n.y': true,
       };
       expect(t).toBeDefined();
     });
@@ -278,7 +316,7 @@ describe('flattenMapOfValue', function () {
       );
     });
 
-    it('sets the fields of the list', function () {
+    it('flattens', function () {
       expect(value).toEqual({
         l: '[1,2,3]',
         'l.0': '1',
@@ -317,6 +355,46 @@ describe('flattenMapOfValue', function () {
         'l.n',
         list[2],
       );
+    });
+  });
+
+  describe('map', function () {
+    let value: FlattenedMapOf<
+      typeof mapTypeDef,
+      string,
+      'm'
+    >;
+
+    const map: ReadonlyRecord<'a' | 'b', { x: number, y: number }> = {
+      a: {
+        x: 1,
+        y: 2,
+      },
+      b: {
+        x: 3,
+        y: 4,
+      },
+    };
+
+    beforeEach(function () {
+      value = flattenMapOfValue(
+        mapTypeDef,
+        map,
+        stringifyMapper,
+        'm',
+      );
+    });
+
+    it('flattens', function () {
+      expect(value).toEqual({
+        m: '{"a":{"x":1,"y":2},"b":{"x":3,"y":4}}',
+        'm.a': '{"x":1,"y":2}',
+        'm.a.x': '1',
+        'm.a.y': '2',
+        'm.b': '{"x":3,"y":4}',
+        'm.b.x': '3',
+        'm.b.y': '4',
+      });
     });
   });
 

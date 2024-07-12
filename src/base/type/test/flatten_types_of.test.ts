@@ -1,5 +1,5 @@
 import {
-  type FlattenedOf,
+  type FlattenedTypesOf,
   flattenTypesOf,
 } from 'base/type/flatten_types_of';
 import {
@@ -7,6 +7,7 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
+  mapTypeDef,
   nullableStructuredCoordinateTypeDef,
   structuredCoordinateTypeDef,
   structuredTypeDef,
@@ -18,7 +19,7 @@ describe('FlattenedOf', function () {
       let expected = {
         l: literalNumericTypeDef,
       } as const;
-      const flattened: FlattenedOf<typeof literalNumericTypeDef, 'l'> = expected;
+      const flattened: FlattenedTypesOf<typeof literalNumericTypeDef, 'l'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
@@ -31,7 +32,7 @@ describe('FlattenedOf', function () {
         'c.x': literalNumericTypeDef,
         'c.y': literalNumericTypeDef,
       };
-      const flattened: FlattenedOf<typeof nullableStructuredCoordinateTypeDef, 'c'> = expected;
+      const flattened: FlattenedTypesOf<typeof nullableStructuredCoordinateTypeDef, 'c'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
@@ -39,31 +40,23 @@ describe('FlattenedOf', function () {
 
   describe('list', function () {
     it('passes type checking', function () {
-      const flattened: FlattenedOf<typeof listTypeDef, 'l'> = {
-        l: listTypeDef,
-        'l.0': literalNumericTypeDef,
-        'l.1': literalNumericTypeDef,
-      };
-      expect(flattened).toBeDefined();
-    });
-
-    it('passes type checking with segment override', function () {
-      const flattened: FlattenedOf<typeof listTypeDef, 'l', 'n'> = {
+      const flattened: FlattenedTypesOf<typeof listTypeDef, 'l', 'n'> = {
         l: listTypeDef,
         'l.n': literalNumericTypeDef,
       };
       expect(flattened).toBeDefined();
     });
+  });
 
-    it('can look up via expression index', function () {
-      const flattened: FlattenedOf<typeof listTypeDef, 'l'> = {
-        l: listTypeDef,
-        'l.0': literalNumericTypeDef,
-        'l.1': literalNumericTypeDef,
-        'l.2': literalNumericTypeDef,
+  describe('map', function () {
+    it('passes type checking', function () {
+      const flattened: FlattenedTypesOf<typeof mapTypeDef, 'm', 'n'> = {
+        m: mapTypeDef,
+        'm.n': structuredCoordinateTypeDef,
+        'm.n.x': literalNumericTypeDef,
+        'm.n.y': literalNumericTypeDef,
       };
-      const x = flattened[`l.${1}`];
-      expect(x).toBeDefined();
+      expect(flattened).toBeDefined();
     });
   });
 
@@ -73,24 +66,9 @@ describe('FlattenedOf', function () {
         r: structuredTypeDef,
         'r.literal': literalNumericTypeDef,
         'r.list': listTypeDef,
-      } as const;
-      const flattened: FlattenedOf<typeof structuredTypeDef, 'r'> = {
-        ...expected,
-        // cannot back-assign numeric indexes
-        'r.list.0': literalNumericTypeDef,
-      };
-      expected = flattened;
-      expect(flattened).toBeDefined();
-    });
-
-    it('passes type checking with segment override', function () {
-      let expected = {
-        r: structuredTypeDef,
-        'r.literal': literalNumericTypeDef,
-        'r.list': listTypeDef,
         'r.list.e': literalNumericTypeDef,
       } as const;
-      const flattened: FlattenedOf<typeof structuredTypeDef, 'r', 'e'> = expected;
+      const flattened: FlattenedTypesOf<typeof structuredTypeDef, 'r', 'e'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
@@ -103,57 +81,20 @@ describe('FlattenedOf', function () {
         'd.disc': discriminatingUnionDiscriminatorTypeDef,
         'd.a': structuredTypeDef,
         'd.a.list': listTypeDef,
-        'd.a.literal': literalNumericTypeDef,
-        'd.b': structuredCoordinateTypeDef,
-        'd.b.x': literalNumericTypeDef,
-        'd.b.y': literalNumericTypeDef,
-      } as const;
-      const flattened: FlattenedOf<typeof discriminatingUnionTypeDef, 'd'> = {
-        ...expected,
-        'd.a.list.0': literalNumericTypeDef,
-      };
-      expected = flattened;
-      expect(flattened).toBeDefined();
-    });
-
-    it('passes type checking with segment override', function () {
-      let expected = {
-        d: discriminatingUnionTypeDef,
-        'd.disc': discriminatingUnionDiscriminatorTypeDef,
-        'd.a': structuredTypeDef,
-        'd.a.list': listTypeDef,
         'd.a.list.x': literalNumericTypeDef,
         'd.a.literal': literalNumericTypeDef,
         'd.b': structuredCoordinateTypeDef,
         'd.b.x': literalNumericTypeDef,
         'd.b.y': literalNumericTypeDef,
       } as const;
-      const flattened: FlattenedOf<typeof discriminatingUnionTypeDef, 'd', 'x'> = expected;
+      const flattened: FlattenedTypesOf<typeof discriminatingUnionTypeDef, 'd', 'x'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
   });
 
   describe('prefixing', function () {
-    it('omits the prefix if empty', function () {
-      let expected = {
-        '': discriminatingUnionTypeDef,
-        disc: discriminatingUnionDiscriminatorTypeDef,
-        a: structuredTypeDef,
-        'a.list': listTypeDef,
-        'a.literal': literalNumericTypeDef,
-        b: structuredCoordinateTypeDef,
-        'b.x': literalNumericTypeDef,
-        'b.y': literalNumericTypeDef,
-        // error
-        // 'a.c': literalNumericTypeDef,
-      } as const;
-      const flattened: FlattenedOf<typeof discriminatingUnionTypeDef, ''> = expected;
-      expected = flattened;
-      expect(flattened).toBeDefined();
-    });
-
-    it('omits the prefix with segment override', function () {
+    it('omits the prefix', function () {
       let expected = {
         '': discriminatingUnionTypeDef,
         disc: discriminatingUnionDiscriminatorTypeDef,
@@ -165,7 +106,7 @@ describe('FlattenedOf', function () {
         'b.x': literalNumericTypeDef,
         'b.y': literalNumericTypeDef,
       } as const;
-      const flattened: FlattenedOf<typeof discriminatingUnionTypeDef, '', 'override'> = expected;
+      const flattened: FlattenedTypesOf<typeof discriminatingUnionTypeDef, '', 'override'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
