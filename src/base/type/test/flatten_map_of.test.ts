@@ -371,7 +371,7 @@ describe('flattenMapOfValue', function () {
   });
 });
 
-// TODO
+// TODO (exercised by 'flattenMapOfValue)
 // describe('flattenMapOfMutableValue', function () {
 // });
 
