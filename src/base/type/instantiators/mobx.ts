@@ -40,7 +40,7 @@ function observeValue<T extends TypeDef>(
       } else {
         return v;
       }
-    case TypeDefType.Record:
+    case TypeDefType.Structured:
       return makeObservable(
         v,
         reduce(

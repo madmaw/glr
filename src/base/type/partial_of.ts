@@ -5,9 +5,9 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
-  type RecordTypeDefFields,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
+  type StructuredTypeField,
   type TypeDef,
   TypeDefType,
 } from './definition';
@@ -17,7 +17,7 @@ import {
 export type PartialOf<F extends TypeDef> = F extends LiteralTypeDef ? PartialOfLiteral<F>
   : F extends NullableTypeDef ? PartialOfNullable<F>
   : F extends ListTypeDef ? PartialOfList<F>
-  : F extends RecordTypeDef ? PartialOfRecord<F>
+  : F extends StructuredTypeDef ? PartialOfStruct<F>
   : F extends DiscriminatingUnionTypeDef ? PartialOfDiscriminatingUnion<F>
   : never;
 
@@ -38,26 +38,26 @@ type PartialOfList<F extends ListTypeDef> = {
   readonly: F['readonly'],
 };
 
-type PartialOfRecordField<
-  F extends RecordTypeDefField,
-> = RecordTypeDefField<PartialOf<F['valueType']>, F['readonly'], true>;
+type PartialOfStructField<
+  F extends StructuredTypeField,
+> = StructuredTypeField<PartialOf<F['valueType']>, F['readonly'], true>;
 
-type PartialOfRecordFields<
-  F extends RecordTypeDefFields,
+type PartialOfStructFields<
+  F extends StructuredTypeDefFields,
 > = {
-  [K in keyof F]: PartialOfRecordField<F[K]>;
+  [K in keyof F]: PartialOfStructField<F[K]>;
 };
 
-type PartialOfRecord<F extends RecordTypeDef> = {
-  readonly type: TypeDefType.Record,
-  readonly fields: PartialOfRecordFields<F['fields']>,
+type PartialOfStruct<F extends StructuredTypeDef> = {
+  readonly type: TypeDefType.Structured,
+  readonly fields: PartialOfStructFields<F['fields']>,
 };
 
 type PartialOfDiscriminatingUnion<F extends DiscriminatingUnionTypeDef> = {
   readonly type: TypeDefType.DiscriminatingUnion,
   readonly discriminator: F['discriminator'],
   readonly unions: {
-    [K in keyof F['unions']]: PartialOfRecordFields<F['unions'][K]>;
+    [K in keyof F['unions']]: PartialOfStructFields<F['unions'][K]>;
   },
 };
 
@@ -76,10 +76,10 @@ export function partialOf<T extends TypeDef>(t: T): PartialOf<T> {
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       return partialOfList(t) as PartialOf<T>;
-    case TypeDefType.Record:
+    case TypeDefType.Structured:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return partialOfRecord(t) as PartialOf<T>;
+      return partialOfStruct(t) as PartialOf<T>;
     case TypeDefType.DiscriminatingUnion:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -116,33 +116,33 @@ function partialOfList<E extends TypeDef, T extends ListTypeDef<E>>({
   };
 }
 
-function partialOfRecord<F extends RecordTypeDefFields, T extends RecordTypeDef<F>>({
+function partialOfStruct<F extends StructuredTypeDefFields, T extends StructuredTypeDef<F>>({
   fields,
-}: T): PartialOfRecord<T> {
+}: T): PartialOfStruct<T> {
   return {
-    type: TypeDefType.Record,
-    fields: partialOfRecordFields(fields),
+    type: TypeDefType.Structured,
+    fields: partialOfStructFields(fields),
   };
 }
 
-function partialOfRecordFields<T extends RecordTypeDefFields>(fields: T): PartialOfRecordFields<T> {
+function partialOfStructFields<T extends StructuredTypeDefFields>(fields: T): PartialOfStructFields<T> {
   // map implementation doesn't understand record structure and mapping function
   // TODO can we make it understand somehow?
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return map(fields, function (_, field) {
-    return partialOfRecordField(field);
-  }) as PartialOfRecordFields<T>;
+    return partialOfStructField(field);
+  }) as PartialOfStructFields<T>;
 }
 
-function partialOfRecordField<
+function partialOfStructField<
   V extends TypeDef,
   Readonly extends boolean,
   Optional extends boolean,
-  T extends RecordTypeDefField<V, Readonly, Optional>,
+  T extends StructuredTypeField<V, Readonly, Optional>,
 >({
   readonly,
   valueType,
-}: T): PartialOfRecordField<T> {
+}: T): PartialOfStructField<T> {
   return {
     valueType: partialOf(valueType),
     readonly,
@@ -160,7 +160,7 @@ function partialOfDiscriminatingUnion<T extends DiscriminatingUnionTypeDef>({
     type: TypeDefType.DiscriminatingUnion,
     discriminator,
     unions: map(unions, function (_, union) {
-      return partialOfRecordFields(union);
+      return partialOfStructFields(union);
     }),
   } as PartialOfDiscriminatingUnion<T>;
 }

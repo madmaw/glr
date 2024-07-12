@@ -5,9 +5,9 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
-  type RecordTypeDefFields,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
+  type StructuredTypeField,
   type TypeDef,
   TypeDefType,
 } from './definition';
@@ -15,7 +15,7 @@ import {
 export type ReadonlyOf<F extends TypeDef> = F extends LiteralTypeDef ? ReadonlyOfLiteral<F>
   : F extends NullableTypeDef ? ReadonlyOfNullable<F>
   : F extends ListTypeDef ? ReadonlyOfList<F>
-  : F extends RecordTypeDef ? ReadonlyOfRecord<F>
+  : F extends StructuredTypeDef ? ReadonlyOfStruct<F>
   : F extends DiscriminatingUnionTypeDef ? ReadonlyOfDiscriminatingUnion<F>
   : never;
 
@@ -35,17 +35,17 @@ export type ReadonlyOfList<F extends ListTypeDef> = {
   readonly readonly: true,
 };
 
-type ReadonlyOfRecordField<
-  F extends RecordTypeDefField,
-> = RecordTypeDefField<ReadonlyOf<F['valueType']>, true, F['optional']>;
+type ReadonlyOfStructField<
+  F extends StructuredTypeField,
+> = StructuredTypeField<ReadonlyOf<F['valueType']>, true, F['optional']>;
 
-type ReadonlyOfRecordFields<F extends RecordTypeDefFields> = {
-  [K in keyof F]: ReadonlyOfRecordField<F[K]>;
+type ReadonlyOfStructFields<F extends StructuredTypeDefFields> = {
+  [K in keyof F]: ReadonlyOfStructField<F[K]>;
 };
 
-export type ReadonlyOfRecord<F extends RecordTypeDef> = {
-  type: TypeDefType.Record,
-  fields: ReadonlyOfRecordFields<F['fields']>,
+export type ReadonlyOfStruct<F extends StructuredTypeDef> = {
+  type: TypeDefType.Structured,
+  fields: ReadonlyOfStructFields<F['fields']>,
 };
 
 export type ReadonlyOfDiscriminatingUnion<
@@ -54,7 +54,7 @@ export type ReadonlyOfDiscriminatingUnion<
   readonly type: TypeDefType.DiscriminatingUnion,
   readonly discriminator: F['discriminator'],
   readonly unions: {
-    [K in keyof F['unions']]: ReadonlyOfRecordFields<F['unions'][K]>;
+    [K in keyof F['unions']]: ReadonlyOfStructFields<F['unions'][K]>;
   },
 };
 
@@ -72,10 +72,10 @@ export function readonlyOf<T extends TypeDef>(t: T): ReadonlyOf<T> {
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       return readonlyOfList(t) as ReadonlyOf<T>;
-    case TypeDefType.Record:
+    case TypeDefType.Structured:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      return readonlyOfRecord(t) as ReadonlyOf<T>;
+      return readonlyOfStruct(t) as ReadonlyOf<T>;
     case TypeDefType.DiscriminatingUnion:
       // converting the implicit any's back causes problems
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -114,33 +114,33 @@ function readonlyOfList<E extends TypeDef, T extends ListTypeDef<E>>({
   };
 }
 
-function readonlyOfRecord<F extends RecordTypeDefFields, T extends RecordTypeDef<F>>({
+function readonlyOfStruct<F extends StructuredTypeDefFields, T extends StructuredTypeDef<F>>({
   fields,
-}: T): ReadonlyOfRecord<T> {
+}: T): ReadonlyOfStruct<T> {
   return {
-    type: TypeDefType.Record,
-    fields: readonlyOfRecordFields(fields),
+    type: TypeDefType.Structured,
+    fields: readonlyOfStructFields(fields),
   };
 }
 
-function readonlyOfRecordFields<T extends RecordTypeDefFields>(fields: T): ReadonlyOfRecordFields<T> {
+function readonlyOfStructFields<T extends StructuredTypeDefFields>(fields: T): ReadonlyOfStructFields<T> {
   // map implementation doesn't understand record structure and mapping function
   // TODO can we make it understand somehow?
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return map(fields, function (_, field) {
-    return readonlyOfRecordField(field);
-  }) as ReadonlyOfRecordFields<T>;
+    return readonlyOfStructField(field);
+  }) as ReadonlyOfStructFields<T>;
 }
 
-function readonlyOfRecordField<
+function readonlyOfStructField<
   V extends TypeDef,
   Readonly extends boolean,
   Optional extends boolean,
-  T extends RecordTypeDefField<V, Readonly, Optional>,
+  T extends StructuredTypeField<V, Readonly, Optional>,
 >({
   optional,
   valueType,
-}: T): ReadonlyOfRecordField<T> {
+}: T): ReadonlyOfStructField<T> {
   return {
     valueType: readonlyOf(valueType),
     optional,
@@ -158,7 +158,7 @@ function readonlyOfDiscriminatingUnion<T extends DiscriminatingUnionTypeDef>({
     type: TypeDefType.DiscriminatingUnion,
     discriminator,
     unions: map(unions, function (_, union) {
-      return readonlyOfRecordFields(union);
+      return readonlyOfStructFields(union);
     }),
   } as ReadonlyOfDiscriminatingUnion<T>;
 }

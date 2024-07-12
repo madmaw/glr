@@ -3,9 +3,9 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordKey,
-  type RecordTypeDef,
-  type RecordTypeDefField,
+  type StructuredFieldKey,
+  type StructuredTypeDef,
+  type StructuredTypeField,
   type TypeDef,
   TypeDefType,
 } from './definition';
@@ -45,15 +45,15 @@ export function list<T extends TypeDef>(elements: TypeDefBuilder<T>): ListTypeDe
   });
 }
 
-export function record(): RecordTypeDefBuilder {
-  return new RecordTypeDefBuilder({
-    type: TypeDefType.Record,
+export function struct(): StructuredTypeDefBuilder {
+  return new StructuredTypeDefBuilder({
+    type: TypeDefType.Structured,
     fields: {},
   });
 }
 
-export function field<T extends TypeDef>(builder: TypeDefBuilder<T>): RecordFieldDefBuilder<T> {
-  return new RecordFieldDefBuilder(builder.typeDef, false, false);
+export function field<T extends TypeDef>(builder: TypeDefBuilder<T>): StructuredFieldDefBuilder<T> {
+  return new StructuredFieldDefBuilder(builder.typeDef, false, false);
 }
 
 class TypeDefBuilder<T extends TypeDef> {
@@ -97,10 +97,10 @@ class ListTypeDefBuilder<
   }
 }
 
-class RecordTypeDefBuilder<
-  Fields extends ReadonlyRecord<RecordKey, RecordTypeDefField> = {},
+class StructuredTypeDefBuilder<
+  Fields extends ReadonlyRecord<StructuredFieldKey, StructuredTypeField> = {},
 > extends TypeDefBuilder<
-  RecordTypeDef<Fields>
+  StructuredTypeDef<Fields>
 > {
   add<
     Name extends string,
@@ -113,12 +113,12 @@ class RecordTypeDefBuilder<
       typeDef,
       isOptional,
       isReadonly,
-    }: RecordFieldDefBuilder<T, Readonly, Optional>,
-  ): RecordTypeDefBuilder<
-    Fields & ReadonlyRecord<Name, RecordTypeDefField<T, Readonly, Optional>>
+    }: StructuredFieldDefBuilder<T, Readonly, Optional>,
+  ): StructuredTypeDefBuilder<
+    Fields & ReadonlyRecord<Name, StructuredTypeField<T, Readonly, Optional>>
   > {
-    return new RecordTypeDefBuilder({
-      type: TypeDefType.Record,
+    return new StructuredTypeDefBuilder({
+      type: TypeDefType.Structured,
       fields: {
         ...this.typeDef.fields,
         [name]: {
@@ -131,7 +131,7 @@ class RecordTypeDefBuilder<
   }
 }
 
-class RecordFieldDefBuilder<
+class StructuredFieldDefBuilder<
   T extends TypeDef,
   Readonly extends boolean = false,
   Optional extends boolean = false,
@@ -144,10 +144,12 @@ class RecordFieldDefBuilder<
   }
 
   readonly() {
-    return new RecordFieldDefBuilder<T, true, Optional>(this.typeDef, true, this.isOptional);
+    return new StructuredFieldDefBuilder<T, true, Optional>(this.typeDef, true, this.isOptional);
   }
 
   optional() {
-    return new RecordFieldDefBuilder<T, Readonly, true>(this.typeDef, this.isReadonly, true);
+    return new StructuredFieldDefBuilder<T, Readonly, true>(this.typeDef, this.isReadonly, true);
   }
 }
+
+// TODO discriminating union

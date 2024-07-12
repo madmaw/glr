@@ -4,7 +4,7 @@ export const enum TypeDefType {
   Literal = 1,
   Nullable,
   List,
-  Record,
+  Structured,
   DiscriminatingUnion,
 }
 
@@ -12,7 +12,7 @@ export type TypeDef =
   | LiteralTypeDef
   | NullableTypeDef
   | ListTypeDef
-  | RecordTypeDef
+  | StructuredTypeDef
   | DiscriminatingUnionTypeDef;
 
 // literal
@@ -45,12 +45,11 @@ export type ListTypeDef<E extends TypeDef = any, Readonly extends boolean = bool
   readonly readonly: Readonly,
 };
 
-// record
-// TODO rename to `struct` and have `record` being just a map of arbitrary keys to a single value type
+// structured type
 
-export type RecordKey = string | number;
+export type StructuredFieldKey = string | number;
 
-export type RecordTypeDefField<
+export type StructuredTypeField<
   // avoid circular ref by defaulting to `any`
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   V extends TypeDef = any,
@@ -62,20 +61,25 @@ export type RecordTypeDefField<
   readonly optional: Optional,
 };
 
-export type RecordTypeDefFields = ReadonlyRecord<RecordKey, RecordTypeDefField>;
+export type StructuredTypeDefFields = ReadonlyRecord<StructuredFieldKey, StructuredTypeField>;
 
-export type RecordTypeDef<
-  Fields extends RecordTypeDefFields = RecordTypeDefFields,
+export type StructuredTypeDef<
+  Fields extends StructuredTypeDefFields = StructuredTypeDefFields,
 > = {
-  readonly type: TypeDefType.Record,
+  readonly type: TypeDefType.Structured,
   readonly fields: Fields,
 };
 
 // discriminating union
 
+export type DiscriminatingUnionKey = string | number;
+
 export type DiscriminatingUnionTypeDef<
   D extends string = string,
-  U extends ReadonlyRecord<RecordKey, RecordTypeDefFields> = ReadonlyRecord<RecordKey, RecordTypeDefFields>,
+  U extends ReadonlyRecord<
+    DiscriminatingUnionKey,
+    StructuredTypeDefFields
+  > = ReadonlyRecord<DiscriminatingUnionKey, StructuredTypeDefFields>,
 > = {
   readonly type: TypeDefType.DiscriminatingUnion,
   readonly discriminator: D,

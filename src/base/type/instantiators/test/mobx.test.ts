@@ -9,7 +9,7 @@ import {
   listTypeDef,
   literalComplexTypeDef,
   literalNumericTypeDef,
-  recordTypeDef,
+  structuredTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import {
@@ -153,9 +153,9 @@ describe('instantiateMobxObservable', function () {
     });
   });
 
-  describe('record', function () {
-    let record: ValueTypeOf<typeof recordTypeDef>;
-    const input: ValueTypeOf<ReadonlyOf<typeof recordTypeDef>> = {
+  describe('structured', function () {
+    let record: ValueTypeOf<typeof structuredTypeDef>;
+    const input: ValueTypeOf<ReadonlyOf<typeof structuredTypeDef>> = {
       list: [
         1,
         2,
@@ -165,7 +165,7 @@ describe('instantiateMobxObservable', function () {
     };
 
     beforeEach(function () {
-      record = instantiateMobxObservable(recordTypeDef, input);
+      record = instantiateMobxObservable(structuredTypeDef, input);
     });
 
     it('instantiates', function () {

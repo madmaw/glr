@@ -11,8 +11,8 @@ import {
   type discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
-  nullableRecordCoordinateTypeDef,
-  recordTypeDef,
+  nullableStructuredCoordinateTypeDef,
+  structuredTypeDef,
 } from './types';
 
 describe('FlattenedMapOf', function () {
@@ -44,7 +44,7 @@ describe('FlattenedMapOf', function () {
   describe('nullable', function () {
     it('passes type checking', function () {
       const t: FlattenedMapOf<
-        typeof nullableRecordCoordinateTypeDef,
+        typeof nullableStructuredCoordinateTypeDef,
         boolean,
         'n'
       > = {
@@ -57,7 +57,7 @@ describe('FlattenedMapOf', function () {
 
     it('passes type checking with omitted fields', function () {
       const t: FlattenedMapOf<
-        typeof nullableRecordCoordinateTypeDef,
+        typeof nullableStructuredCoordinateTypeDef,
         boolean,
         'n'
       > = {
@@ -96,10 +96,10 @@ describe('FlattenedMapOf', function () {
     });
   });
 
-  describe('record', function () {
+  describe('structured', function () {
     it('passes type checking', function () {
       const t: FlattenedMapOf<
-        typeof recordTypeDef,
+        typeof structuredTypeDef,
         boolean,
         'r'
       > = {
@@ -114,7 +114,7 @@ describe('FlattenedMapOf', function () {
 
     it('passes type checking with override', function () {
       const t: FlattenedMapOf<
-        typeof recordTypeDef,
+        typeof structuredTypeDef,
         boolean,
         'r',
         'n'
@@ -226,14 +226,14 @@ describe('flattenMapOfValue', function () {
 
   describe('nullable', function () {
     let value: FlattenedMapOf<
-      typeof nullableRecordCoordinateTypeDef,
+      typeof nullableStructuredCoordinateTypeDef,
       string,
       'n'
     >;
 
     beforeEach(function () {
       value = flattenMapOfValue(
-        nullableRecordCoordinateTypeDef,
+        nullableStructuredCoordinateTypeDef,
         null,
         stringifyMapper,
         'n',
@@ -249,7 +249,7 @@ describe('flattenMapOfValue', function () {
     it('calls the mapping function with the expected parameters', function () {
       expect(stringifyMapper).toHaveBeenCalledTimes(1);
       expect(stringifyMapper).toHaveBeenCalledWith(
-        nullableRecordCoordinateTypeDef,
+        nullableStructuredCoordinateTypeDef,
         'n',
         'n',
         null,
@@ -320,21 +320,21 @@ describe('flattenMapOfValue', function () {
     });
   });
 
-  describe('record', function () {
+  describe('structured', function () {
     let value: FlattenedMapOf<
-      typeof recordTypeDef,
+      typeof structuredTypeDef,
       string,
       'r'
     >;
 
-    const record: ValueTypeOf<ReadonlyOf<typeof recordTypeDef>> = {
+    const record: ValueTypeOf<ReadonlyOf<typeof structuredTypeDef>> = {
       literal: 1,
       list: [2],
     };
 
     beforeEach(function () {
       value = flattenMapOfValue(
-        recordTypeDef,
+        structuredTypeDef,
         record,
         stringifyMapper,
         'r',
@@ -356,7 +356,7 @@ describe('flattenMapOfValue', function () {
 
     it('calls the mapping function with the expected paths', function () {
       value = flattenMapOfValue(
-        recordTypeDef,
+        structuredTypeDef,
         record,
         typePathMapper,
         'r',

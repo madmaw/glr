@@ -3,10 +3,10 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordKey,
-  type RecordTypeDef,
-  type RecordTypeDefField,
-  type RecordTypeDefFields,
+  type StructuredFieldKey,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
+  type StructuredTypeField,
   type TypeDef,
 } from './definition';
 
@@ -44,15 +44,15 @@ type InternalPathsOfChildren<
 > = F extends LiteralTypeDef ? PathsOfLiteralChildren
   : F extends NullableTypeDef ? PathsOfNullableChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends ListTypeDef ? PathsOfListChildren<F, Prefix, VariableSegmentOverride, Depth>
-  : F extends RecordTypeDef ? FlattenedOfRecordChildren<F, Prefix, VariableSegmentOverride, Depth>
+  : F extends StructuredTypeDef ? FlattenedOfStructChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends DiscriminatingUnionTypeDef
     ? FlattenedOfDiscriminatingUnionChildren<F, Prefix, VariableSegmentOverride, Depth>
   : never;
 
 type PrefixOf<
   Prefix extends string,
-  Key extends RecordKey | symbol,
-> = Key extends RecordKey ? Prefix extends '' ? `${Key}`
+  Key extends StructuredFieldKey | symbol,
+> = Key extends StructuredFieldKey ? Prefix extends '' ? `${Key}`
   : `${Prefix}.${Key}`
   : never;
 
@@ -80,8 +80,8 @@ type PathsOfListChildren<
   Depth
 >;
 
-type PathsOfRecordFieldGroup<
-  Fields extends Record<string, RecordTypeDefField>,
+type PathsOfStructFieldGroup<
+  Fields extends Record<string, StructuredTypeField>,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
   Depth extends number,
@@ -94,19 +94,19 @@ type PathsOfRecordFieldGroup<
   >;
 }[keyof Fields];
 
-type PathsOfRecordFields<
-  F extends RecordTypeDefFields,
+type PathsOfStructFields<
+  F extends StructuredTypeDefFields,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
   Depth extends number,
-> = PathsOfRecordFieldGroup<F, Prefix, VariableSegmentOverride, Depth>;
+> = PathsOfStructFieldGroup<F, Prefix, VariableSegmentOverride, Depth>;
 
-type FlattenedOfRecordChildren<
-  F extends RecordTypeDef,
+type FlattenedOfStructChildren<
+  F extends StructuredTypeDef,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
   Depth extends number,
-> = PathsOfRecordFields<
+> = PathsOfStructFields<
   F['fields'],
   Prefix,
   VariableSegmentOverride,
@@ -121,7 +121,7 @@ type FlattenedOfDiscriminatingUnionChildren<
 > =
   | {
     readonly [K in keyof F['unions']]:
-      | PathsOfRecordFields<
+      | PathsOfStructFields<
         F['unions'][K],
         PrefixOf<Prefix, K>,
         VariableSegmentOverride,

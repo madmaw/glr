@@ -7,9 +7,9 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
-  nullableRecordCoordinateTypeDef,
-  recordCoordinateTypeDef,
-  recordTypeDef,
+  nullableStructuredCoordinateTypeDef,
+  structuredCoordinateTypeDef,
+  structuredTypeDef,
 } from './types';
 
 describe('FlattenedOf', function () {
@@ -27,11 +27,11 @@ describe('FlattenedOf', function () {
   describe('nullable', function () {
     it('passes type checking', function () {
       let expected = {
-        c: nullableRecordCoordinateTypeDef,
+        c: nullableStructuredCoordinateTypeDef,
         'c.x': literalNumericTypeDef,
         'c.y': literalNumericTypeDef,
       };
-      const flattened: FlattenedOf<typeof nullableRecordCoordinateTypeDef, 'c'> = expected;
+      const flattened: FlattenedOf<typeof nullableStructuredCoordinateTypeDef, 'c'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
@@ -67,14 +67,14 @@ describe('FlattenedOf', function () {
     });
   });
 
-  describe('record', function () {
+  describe('structured', function () {
     it('passes type checking', function () {
       let expected = {
-        r: recordTypeDef,
+        r: structuredTypeDef,
         'r.literal': literalNumericTypeDef,
         'r.list': listTypeDef,
       } as const;
-      const flattened: FlattenedOf<typeof recordTypeDef, 'r'> = {
+      const flattened: FlattenedOf<typeof structuredTypeDef, 'r'> = {
         ...expected,
         // cannot back-assign numeric indexes
         'r.list.0': literalNumericTypeDef,
@@ -85,12 +85,12 @@ describe('FlattenedOf', function () {
 
     it('passes type checking with segment override', function () {
       let expected = {
-        r: recordTypeDef,
+        r: structuredTypeDef,
         'r.literal': literalNumericTypeDef,
         'r.list': listTypeDef,
         'r.list.e': literalNumericTypeDef,
       } as const;
-      const flattened: FlattenedOf<typeof recordTypeDef, 'r', 'e'> = expected;
+      const flattened: FlattenedOf<typeof structuredTypeDef, 'r', 'e'> = expected;
       expected = flattened;
       expect(flattened).toBeDefined();
     });
@@ -101,10 +101,10 @@ describe('FlattenedOf', function () {
       let expected = {
         d: discriminatingUnionTypeDef,
         'd.disc': discriminatingUnionDiscriminatorTypeDef,
-        'd.a': recordTypeDef,
+        'd.a': structuredTypeDef,
         'd.a.list': listTypeDef,
         'd.a.literal': literalNumericTypeDef,
-        'd.b': recordCoordinateTypeDef,
+        'd.b': structuredCoordinateTypeDef,
         'd.b.x': literalNumericTypeDef,
         'd.b.y': literalNumericTypeDef,
       } as const;
@@ -120,11 +120,11 @@ describe('FlattenedOf', function () {
       let expected = {
         d: discriminatingUnionTypeDef,
         'd.disc': discriminatingUnionDiscriminatorTypeDef,
-        'd.a': recordTypeDef,
+        'd.a': structuredTypeDef,
         'd.a.list': listTypeDef,
         'd.a.list.x': literalNumericTypeDef,
         'd.a.literal': literalNumericTypeDef,
-        'd.b': recordCoordinateTypeDef,
+        'd.b': structuredCoordinateTypeDef,
         'd.b.x': literalNumericTypeDef,
         'd.b.y': literalNumericTypeDef,
       } as const;
@@ -139,10 +139,10 @@ describe('FlattenedOf', function () {
       let expected = {
         '': discriminatingUnionTypeDef,
         disc: discriminatingUnionDiscriminatorTypeDef,
-        a: recordTypeDef,
+        a: structuredTypeDef,
         'a.list': listTypeDef,
         'a.literal': literalNumericTypeDef,
-        b: recordCoordinateTypeDef,
+        b: structuredCoordinateTypeDef,
         'b.x': literalNumericTypeDef,
         'b.y': literalNumericTypeDef,
         // error
@@ -157,11 +157,11 @@ describe('FlattenedOf', function () {
       let expected = {
         '': discriminatingUnionTypeDef,
         disc: discriminatingUnionDiscriminatorTypeDef,
-        a: recordTypeDef,
+        a: structuredTypeDef,
         'a.list': listTypeDef,
         'a.list.override': literalNumericTypeDef,
         'a.literal': literalNumericTypeDef,
-        b: recordCoordinateTypeDef,
+        b: structuredCoordinateTypeDef,
         'b.x': literalNumericTypeDef,
         'b.y': literalNumericTypeDef,
       } as const;
@@ -181,9 +181,9 @@ describe('flattenedOf', function () {
   });
 
   it('produces the expected nullable', function () {
-    const flattened = flattenTypesOf(nullableRecordCoordinateTypeDef, 'n');
+    const flattened = flattenTypesOf(nullableStructuredCoordinateTypeDef, 'n');
     expect(flattened).toEqual({
-      n: nullableRecordCoordinateTypeDef,
+      n: nullableStructuredCoordinateTypeDef,
       'n.x': literalNumericTypeDef,
       'n.y': literalNumericTypeDef,
     });
@@ -198,9 +198,9 @@ describe('flattenedOf', function () {
   });
 
   it('produces the expected record', function () {
-    const flattened = flattenTypesOf(recordTypeDef, 'r');
+    const flattened = flattenTypesOf(structuredTypeDef, 'r');
     expect(flattened).toEqual({
-      r: recordTypeDef,
+      r: structuredTypeDef,
       'r.literal': literalNumericTypeDef,
       'r.list': listTypeDef,
       'r.list.n': literalNumericTypeDef,
@@ -212,11 +212,11 @@ describe('flattenedOf', function () {
     expect(flattened).toEqual({
       d: discriminatingUnionTypeDef,
       'd.disc': discriminatingUnionDiscriminatorTypeDef,
-      'd.a': recordTypeDef,
+      'd.a': structuredTypeDef,
       'd.a.list': listTypeDef,
       'd.a.list.n': literalNumericTypeDef,
       'd.a.literal': literalNumericTypeDef,
-      'd.b': recordCoordinateTypeDef,
+      'd.b': structuredCoordinateTypeDef,
       'd.b.x': literalNumericTypeDef,
       'd.b.y': literalNumericTypeDef,
     });

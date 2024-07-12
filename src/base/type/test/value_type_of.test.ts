@@ -3,8 +3,8 @@ import {
   type discriminatingUnionTypeDef,
   type listTypeDef,
   type literalNumericTypeDef,
-  type nullableRecordCoordinateTypeDef,
-  type recordTypeDef,
+  type nullableStructuredCoordinateTypeDef,
+  type structuredTypeDef,
 } from './types';
 
 // We are just testing this file compiles. As we are just producing types there is no code for the tests
@@ -26,7 +26,7 @@ describe('ValueTypeOf', function () {
         x: number,
         y: number,
       } | null = null;
-      const t: ValueTypeOf<typeof nullableRecordCoordinateTypeDef> = expected;
+      const t: ValueTypeOf<typeof nullableStructuredCoordinateTypeDef> = expected;
       expected = t;
       expect(t).toBeNull();
     });
@@ -39,7 +39,7 @@ describe('ValueTypeOf', function () {
         x: 1,
         y: 2,
       };
-      const t: ValueTypeOf<typeof nullableRecordCoordinateTypeDef> = expected;
+      const t: ValueTypeOf<typeof nullableStructuredCoordinateTypeDef> = expected;
       expected = t;
       expect(t).toBeDefined();
     });
@@ -59,7 +59,7 @@ describe('ValueTypeOf', function () {
     });
   });
 
-  describe('record', function () {
+  describe('structured', function () {
     it('has the expected shape', function () {
       let expected: {
         list?: number[],
@@ -72,7 +72,7 @@ describe('ValueTypeOf', function () {
         ],
         literal: 1,
       };
-      const t: ValueTypeOf<typeof recordTypeDef> = expected;
+      const t: ValueTypeOf<typeof structuredTypeDef> = expected;
       // test assignment in both directions
       expected = t;
       expect(t).toBeDefined();

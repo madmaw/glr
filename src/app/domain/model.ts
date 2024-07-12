@@ -3,7 +3,7 @@ import {
   list,
   literal,
   numberBuilder,
-  record,
+  struct,
   stringBuilder,
 } from 'base/type/builder';
 
@@ -13,7 +13,7 @@ export type DocumentId = string;
 const documentIdBuilder = literal<DocumentId>();
 export const documentIdTypeDef = documentIdBuilder.typeDef;
 
-const channelBuilder = record()
+const channelBuilder = struct()
   .add(
     'name',
     field(stringBuilder),
@@ -27,7 +27,7 @@ export const channelTypeDef = channelBuilder.typeDef;
 export type MutableChannel = typeof channelBuilder.aValue;
 export type Channel = typeof channelBuilder.readonlyOf.aValue;
 
-const documentBuilder = record()
+const documentBuilder = struct()
   .add(
     'id',
     field(documentIdBuilder).readonly(),

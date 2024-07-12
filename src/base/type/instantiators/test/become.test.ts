@@ -6,7 +6,7 @@ import {
   listTypeDef,
   literalComplexTypeDef,
   literalNumericTypeDef,
-  recordTypeDef,
+  structuredTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 
@@ -116,24 +116,24 @@ describe('become', function () {
     });
   });
 
-  describe('record', function () {
+  describe('structured', function () {
     it('does not change anything if the values are the same', function () {
-      const record: ValueTypeOf<typeof recordTypeDef> = {
+      const struct: ValueTypeOf<typeof structuredTypeDef> = {
         list: [
           1,
           2,
         ],
         literal: 3,
       };
-      const prototype = Object.freeze({ ...record });
-      const result = become(recordTypeDef, instantiator, record, prototype);
-      expect(result).toBe(record);
+      const prototype = Object.freeze({ ...struct });
+      const result = become(structuredTypeDef, instantiator, struct, prototype);
+      expect(result).toBe(struct);
       expect(result).toEqual(prototype);
       expect(instantiator).not.toBeCalled();
     });
 
     it('adds the missing list', function () {
-      const record: ValueTypeOf<typeof recordTypeDef> = {
+      const struct: ValueTypeOf<typeof structuredTypeDef> = {
         list: undefined,
         literal: 3,
       };
@@ -144,8 +144,8 @@ describe('become', function () {
         ]),
         literal: 3,
       });
-      const result = become(recordTypeDef, instantiator, record, prototype);
-      expect(result).toBe(record);
+      const result = become(structuredTypeDef, instantiator, struct, prototype);
+      expect(result).toBe(struct);
       expect(result).toEqual(prototype);
       expect(instantiator).toHaveBeenCalledTimes(1);
       expect(instantiator).toHaveBeenNthCalledWith(1, listTypeDef, [
@@ -155,7 +155,7 @@ describe('become', function () {
     });
 
     it('adds the missing literal', function () {
-      const record: ValueTypeOf<typeof recordTypeDef> = {
+      const struct: ValueTypeOf<typeof structuredTypeDef> = {
         list: [
           1,
           2,
@@ -168,15 +168,15 @@ describe('become', function () {
         ]),
         literal: 3,
       });
-      const result = become(recordTypeDef, instantiator, record, prototype);
-      expect(result).toBe(record);
+      const result = become(structuredTypeDef, instantiator, struct, prototype);
+      expect(result).toBe(struct);
       expect(result).toEqual(prototype);
       expect(instantiator).toHaveBeenCalledTimes(1);
       expect(instantiator).toHaveBeenNthCalledWith(1, literalNumericTypeDef, 3);
     });
 
     it('removes the additional list', function () {
-      const record: ValueTypeOf<typeof recordTypeDef> = {
+      const struct: ValueTypeOf<typeof structuredTypeDef> = {
         list: [
           1,
           2,
@@ -186,14 +186,14 @@ describe('become', function () {
       const prototype = Object.freeze({
         literal: 3,
       });
-      const result = become(recordTypeDef, instantiator, record, prototype);
-      expect(result).toBe(record);
+      const result = become(structuredTypeDef, instantiator, struct, prototype);
+      expect(result).toBe(struct);
       expect(result).toEqual(prototype);
       expect(instantiator).not.toHaveBeenCalled();
     });
 
     it('performs the delta on the list property', function () {
-      const record: ValueTypeOf<typeof recordTypeDef> = {
+      const struct: ValueTypeOf<typeof structuredTypeDef> = {
         list: [],
       };
       const prototype = Object.freeze({
@@ -202,8 +202,8 @@ describe('become', function () {
           2,
         ],
       });
-      const result = become(recordTypeDef, instantiator, record, prototype);
-      expect(result).toBe(record);
+      const result = become(structuredTypeDef, instantiator, struct, prototype);
+      expect(result).toBe(struct);
       expect(result).toEqual(prototype);
       expect(instantiator).toHaveBeenCalledTimes(2);
       expect(instantiator).toHaveBeenNthCalledWith(1, literalNumericTypeDef, 1);

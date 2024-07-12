@@ -1,9 +1,9 @@
-import { type RecordKey } from './definition';
+import { type StructuredFieldKey } from './definition';
 
 export type PrefixOf<
   Prefix extends string,
   Key extends string | number | symbol,
-> = Key extends RecordKey ? Prefix extends '' ? `${Key}`
+> = Key extends StructuredFieldKey ? Prefix extends '' ? `${Key}`
   : `${Prefix}.${Key}`
   : never;
 

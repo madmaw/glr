@@ -3,11 +3,12 @@ import {
   type discriminatingUnionTypeDef,
   type listTypeDef,
   type literalNumericTypeDef,
-  type recordTypeDef,
+  type nullableStructuredCoordinateTypeDef,
+  type structuredTypeDef,
 } from './types';
 
 describe('PathsOf', function () {
-  describe('literal descriptor', function () {
+  describe('literal', function () {
     it('contains just the keys', function () {
       const paths: Record<PathsOf<typeof literalNumericTypeDef, 'd'>, ''> = {
         d: '',
@@ -23,7 +24,18 @@ describe('PathsOf', function () {
     });
   });
 
-  describe('list descriptor', function () {
+  describe('nullable', function () {
+    it('contains just the keys', function () {
+      const paths: Record<PathsOf<typeof nullableStructuredCoordinateTypeDef, 'c'>, ''> = {
+        c: '',
+        'c.x': '',
+        'c.y': '',
+      };
+      expect(paths).toBeDefined();
+    });
+  });
+
+  describe('list', function () {
     it('contains just the keys', function () {
       const paths: Record<PathsOf<typeof listTypeDef, 'l'>, ''> = {
         l: '',
@@ -47,9 +59,9 @@ describe('PathsOf', function () {
     });
   });
 
-  describe('record descriptor', function () {
+  describe('structured', function () {
     it('contains just the keys', function () {
-      const paths: Record<PathsOf<typeof recordTypeDef>, ''> = {
+      const paths: Record<PathsOf<typeof structuredTypeDef>, ''> = {
         '': '',
         list: '',
         'list.0': '',
@@ -59,7 +71,7 @@ describe('PathsOf', function () {
     });
 
     it('uses the specified override', function () {
-      const paths: Record<PathsOf<typeof recordTypeDef, '', 'n'>, ''> = {
+      const paths: Record<PathsOf<typeof structuredTypeDef, '', 'n'>, ''> = {
         '': '',
         list: '',
         'list.n': '',

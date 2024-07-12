@@ -5,8 +5,8 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
+  type StructuredTypeDef,
+  type StructuredTypeField,
   type TypeDef,
 } from 'base/type/definition';
 import { type ValueTypeOf } from 'base/type/value_type_of';
@@ -95,7 +95,7 @@ type InternalFlattenedOfChildren<
       TypeSegmentOverride,
       Depth
     >
-  : F extends RecordTypeDef ? FlattenedOfRecordChildren<
+  : F extends StructuredTypeDef ? FlattenedOfStructChildren<
       F,
       Mutable,
       ValuePrefix,
@@ -153,8 +153,8 @@ type FlattenedOfListChildren<
   Depth
 >;
 
-type FlattenedOfRecordFieldGroup<
-  Fields extends Record<string, RecordTypeDefField>,
+type FlattenedOfStructFieldGroup<
+  Fields extends Record<string, StructuredTypeField>,
   Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
@@ -185,14 +185,14 @@ type FlattenedOfRecordFieldGroup<
         >;
     }[keyof Fields]>;
 
-type FlattenedOfRecordChildren<
-  F extends RecordTypeDef,
+type FlattenedOfStructChildren<
+  F extends StructuredTypeDef,
   Mutable extends boolean,
   ValuePrefix extends string,
   TypePrefix extends string,
   TypeSegmentOverride extends string,
   Depth extends number,
-> = FlattenedOfRecordFieldGroup<
+> = FlattenedOfStructFieldGroup<
   F['fields'],
   Mutable,
   ValuePrefix,
@@ -211,7 +211,7 @@ type FlattenedOfDiscriminatingUnionChildren<
 > =
   & Partial<UnionToIntersection<
     {
-      readonly [K in keyof F['unions']]: FlattenedOfRecordFieldGroup<
+      readonly [K in keyof F['unions']]: FlattenedOfStructFieldGroup<
         F['unions'][K],
         Mutable,
         PrefixOf<ValuePrefix, K>,
@@ -239,7 +239,6 @@ type InternalFlattenedValue = {
   readonly value: ValueTypeOf<TypeDef>,
   readonly setValue?: (value: ValueTypeOf<TypeDef>) => void,
 };
-type InternalFlattenedValues = Record<string, InternalFlattenedValue>;
 
 export function flattenValuesOf<
   T extends TypeDef,

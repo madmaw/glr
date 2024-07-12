@@ -5,9 +5,9 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
-  type RecordTypeDefFields,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
+  type StructuredTypeField,
   type TypeDef,
 } from './definition';
 import { flattenMapOfType } from './flatten_map_of';
@@ -40,7 +40,7 @@ type InternalFlattenedOfChildren<
 > = F extends LiteralTypeDef ? FlattenedOfLiteralChildren
   : F extends NullableTypeDef ? FlattenedOfNullableChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends ListTypeDef ? FlattenedOfListChildren<F, Prefix, VariableSegmentOverride, Depth>
-  : F extends RecordTypeDef ? FlattenedOfRecordChildren<F, Prefix, VariableSegmentOverride, Depth>
+  : F extends StructuredTypeDef ? FlattenedOfStructChildren<F, Prefix, VariableSegmentOverride, Depth>
   : F extends DiscriminatingUnionTypeDef
     ? FlattenedOfDiscriminatingUnionChildren<F, Prefix, VariableSegmentOverride, Depth>
   : never;
@@ -69,8 +69,8 @@ type FlattenedOfListChildren<
   Depth
 >;
 
-type FlattenedOfRecordFieldGroup<
-  Fields extends Record<string, RecordTypeDefField>,
+type FlattenedOfStructFieldGroup<
+  Fields extends Record<string, StructuredTypeField>,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
   Depth extends number,
@@ -87,19 +87,19 @@ type FlattenedOfRecordFieldGroup<
       >;
     }[keyof Fields]>;
 
-type FlattenedOfRecordFields<
-  F extends RecordTypeDefFields,
+type FlattenedOfStructFields<
+  F extends StructuredTypeDefFields,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
   Depth extends number,
-> = FlattenedOfRecordFieldGroup<F, Prefix, VariableSegmentOverride, Depth>;
+> = FlattenedOfStructFieldGroup<F, Prefix, VariableSegmentOverride, Depth>;
 
-type FlattenedOfRecordChildren<
-  F extends RecordTypeDef,
+type FlattenedOfStructChildren<
+  F extends StructuredTypeDef,
   Prefix extends string,
   VariableSegmentOverride extends string | undefined,
   Depth extends number,
-> = FlattenedOfRecordFields<
+> = FlattenedOfStructFields<
   F['fields'],
   Prefix,
   VariableSegmentOverride,
@@ -115,14 +115,14 @@ type FlattenedOfDiscriminatingUnionChildren<
   & UnionToIntersection<
     {
       readonly [K in keyof F['unions']]:
-        & FlattenedOfRecordFields<
+        & FlattenedOfStructFields<
           F['unions'][K],
           PrefixOf<Prefix, K>,
           VariableSegmentOverride,
           Depth
         >
         // synthesize a type for PrefixOf<Prefix, K>
-        & ReadonlyRecord<PrefixOf<Prefix, K>, RecordTypeDef<F['unions'][K]>>;
+        & ReadonlyRecord<PrefixOf<Prefix, K>, StructuredTypeDef<F['unions'][K]>>;
     }[keyof F['unions']]
   >
   // include the discriminator

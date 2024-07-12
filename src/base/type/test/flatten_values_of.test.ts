@@ -7,8 +7,8 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
-  nullableRecordCoordinateTypeDef,
-  recordTypeDef,
+  nullableStructuredCoordinateTypeDef as nullableStructuredCoordinateTypeDef,
+  structuredTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import {
@@ -37,7 +37,7 @@ describe('FlattenedValuesOf', function () {
   describe('nullable', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
-        typeof nullableRecordCoordinateTypeDef,
+        typeof nullableStructuredCoordinateTypeDef,
         true,
         'b'
       > = {
@@ -63,7 +63,7 @@ describe('FlattenedValuesOf', function () {
 
     it('passes type checking with missing child fields', function () {
       const t: FlattenedValuesOf<
-        typeof nullableRecordCoordinateTypeDef,
+        typeof nullableStructuredCoordinateTypeDef,
         true,
         'b'
       > = {
@@ -99,10 +99,10 @@ describe('FlattenedValuesOf', function () {
     });
   });
 
-  describe('record', function () {
+  describe('structured', function () {
     it('passes type checking', function () {
       const t: FlattenedValuesOf<
-        typeof recordTypeDef,
+        typeof structuredTypeDef,
         true,
         'r'
       > = {
@@ -130,7 +130,7 @@ describe('FlattenedValuesOf', function () {
 
     it('passes type checking with missing optional fields', function () {
       const t: FlattenedValuesOf<
-        typeof recordTypeDef,
+        typeof structuredTypeDef,
         true,
         'r'
       > = {
@@ -209,7 +209,7 @@ describe('flattenValuesOf', function () {
 
   describe('nullable', function () {
     it('produces the expected result', function () {
-      const flattened = flattenValuesOf(nullableRecordCoordinateTypeDef, null, 'n');
+      const flattened = flattenValuesOf(nullableStructuredCoordinateTypeDef, null, 'n');
       expect(flattened).toEqual({
         n: {
           value: null,
@@ -218,6 +218,7 @@ describe('flattenValuesOf', function () {
       });
     });
   });
+  // TODO other types
 });
 
 describe('flattenMutableValuesOf', function () {
@@ -236,7 +237,7 @@ describe('flattenMutableValuesOf', function () {
 
   describe('nullable', function () {
     it('produces the expected result', function () {
-      const flattened = flattenMutableValuesOf(nullableRecordCoordinateTypeDef, null, 'n');
+      const flattened = flattenMutableValuesOf(nullableStructuredCoordinateTypeDef, null, 'n');
       expect(flattened).toEqual({
         n: {
           value: null,
@@ -292,9 +293,9 @@ describe('flattenMutableValuesOf', function () {
     });
   });
 
-  describe('record', function () {
-    let r: ValueTypeOf<typeof recordTypeDef>;
-    let flattened: FlattenedValuesOf<typeof recordTypeDef, true, 'r'>;
+  describe('structured', function () {
+    let r: ValueTypeOf<typeof structuredTypeDef>;
+    let flattened: FlattenedValuesOf<typeof structuredTypeDef, true, 'r'>;
 
     beforeEach(function () {
       r = {
@@ -302,7 +303,7 @@ describe('flattenMutableValuesOf', function () {
         literal: 2,
       };
       flattened = flattenMutableValuesOf(
-        recordTypeDef,
+        structuredTypeDef,
         r,
         'r',
       );

@@ -3,16 +3,16 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type NullableTypeDef,
-  type RecordKey,
-  type RecordTypeDef,
-  type RecordTypeDefField,
+  type StructuredFieldKey,
+  type StructuredTypeDef,
+  type StructuredTypeField,
   type TypeDef,
   TypeDefType,
 } from 'base/type/definition';
 import { type ReadonlyOf } from 'base/type/readonly_of';
 import {
   type ValueTypeOf,
-  type ValueTypeOfRecordFields,
+  type ValueTypeOfStructFields,
 } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
 
@@ -52,8 +52,8 @@ function instantiate<T extends TypeDef, R extends (ValueTypeOf<ReadonlyOf<T>> | 
         value,
         modifier,
       );
-    case TypeDefType.Record:
-      return instantiateRecord(
+    case TypeDefType.Structured:
+      return instantiateStruct(
         def,
         value,
         modifier,
@@ -121,14 +121,14 @@ function instantiateList<
   return modifier(list as ValueTypeOf<T>, def);
 }
 
-function instantiateRecordFields<
-  Fields extends Record<RecordKey, RecordTypeDefField>,
+function instantiateStructFields<
+  Fields extends Record<StructuredFieldKey, StructuredTypeField>,
   Extra,
 >(
   fields: Fields,
-  value: ValueTypeOfRecordFields<Fields, {}>,
+  value: ValueTypeOfStructFields<Fields, {}>,
   extra: Extra,
-): ValueTypeOfRecordFields<Fields, Extra> {
+): ValueTypeOfStructFields<Fields, Extra> {
   const record = reduce(fields, function (acc, key, field) {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
     const fieldValue = (value as any)[key];
@@ -140,21 +140,21 @@ function instantiateRecordFields<
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
   }, extra as Record<string, any>);
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return record as ValueTypeOfRecordFields<Fields, Extra>;
+  return record as ValueTypeOfStructFields<Fields, Extra>;
 }
 
-function instantiateRecord<
+function instantiateStruct<
   T extends TypeDef,
   R extends (ValueTypeOf<ReadonlyOf<T>> | ValueTypeOf<T>),
 >(
-  def: RecordTypeDef,
+  def: StructuredTypeDef,
   value: ValueTypeOf<ReadonlyOf<T>>,
   modifier: Modifier<ValueTypeOf<T>, R>,
 ): R {
   const {
     fields,
   } = def;
-  const record = instantiateRecordFields(fields, value, {});
+  const record = instantiateStructFields(fields, value, {});
   // TODO: work out a way of maintaining the record type instead of casting
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return modifier(record as ValueTypeOf<T>, def);
@@ -173,7 +173,7 @@ function instantiateDiscriminatingUnion<
     unions,
   } = def;
   const discriminatorValue = value[discriminator];
-  const discriminatingUnion = instantiateRecordFields(
+  const discriminatingUnion = instantiateStructFields(
     unions[discriminatorValue],
     value,
     {

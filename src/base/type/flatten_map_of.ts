@@ -5,9 +5,9 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
-  type RecordTypeDefFields,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
+  type StructuredTypeField,
   type TypeDef,
   TypeDefType,
 } from 'base/type/definition';
@@ -80,7 +80,7 @@ type InternalFlattenedOfChildren<
       SegmentOverride,
       Depth
     >
-  : F extends RecordTypeDef ? FlattenedOfRecordChildren<
+  : F extends StructuredTypeDef ? FlattenedOfStructChildren<
       F,
       R,
       Prefix,
@@ -133,8 +133,8 @@ type FlattenedOfListChildren<
   Depth
 >;
 
-type FlattenedOfRecordFieldGroup<
-  Fields extends Record<string, RecordTypeDefField>,
+type FlattenedOfStructFieldGroup<
+  Fields extends Record<string, StructuredTypeField>,
   R,
   Prefix extends string,
   SegmentOverride extends string | undefined,
@@ -157,13 +157,13 @@ type FlattenedOfRecordFieldGroup<
       >;
     }[keyof Fields]>;
 
-type FlattenedOfRecordChildren<
-  F extends RecordTypeDef,
+type FlattenedOfStructChildren<
+  F extends StructuredTypeDef,
   R,
   Prefix extends string,
   SegmentOverride extends string | undefined,
   Depth extends number,
-> = FlattenedOfRecordFieldGroup<
+> = FlattenedOfStructFieldGroup<
   F['fields'],
   R,
   Prefix,
@@ -183,7 +183,7 @@ type FlattenedOfDiscriminatingUnionChildren<
       readonly [K in keyof F['unions']]: MaybePartial<
         true,
         SegmentOverride,
-        FlattenedOfRecordFieldGroup<
+        FlattenedOfStructFieldGroup<
           F['unions'][K],
           R,
           PrefixOf<Prefix, K>,
@@ -321,8 +321,8 @@ function flattenChildValues(
       return flattenNullableValue(acc, def, value, f, valuePath, typePath);
     case TypeDefType.List:
       return flattenListValue(acc, def, value, f, valuePath, typePath);
-    case TypeDefType.Record:
-      return flattenRecordValue(acc, def, value, f, valuePath, typePath);
+    case TypeDefType.Structured:
+      return flattenStructValue(acc, def, value, f, valuePath, typePath);
     case TypeDefType.DiscriminatingUnion:
       return flattenDiscriminatingUnionValue(acc, def, value, f, valuePath, typePath);
     default:
@@ -395,7 +395,7 @@ function flattenListValue(
 
 function flattenFieldValues(
   acc: InternalFlattenedValues,
-  fields: RecordTypeDefFields,
+  fields: StructuredTypeDefFields,
   // no way to know anything about the type here
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any,
@@ -423,10 +423,10 @@ function flattenFieldValues(
   );
 }
 
-function flattenRecordValue(
+function flattenStructValue(
   acc: InternalFlattenedValues,
-  def: RecordTypeDef,
-  value: ValueTypeOf<RecordTypeDef>,
+  def: StructuredTypeDef,
+  value: ValueTypeOf<StructuredTypeDef>,
   f: InternalValueMapper,
   valuePath: string,
   typePath: string,
@@ -547,8 +547,8 @@ function flattenChildTypes(
       return flattenNullableType(acc, def, f, path, segmentOverride);
     case TypeDefType.List:
       return flattenListType(acc, def, f, path, segmentOverride);
-    case TypeDefType.Record:
-      return flattenRecordType(acc, def, f, path, segmentOverride);
+    case TypeDefType.Structured:
+      return flattenStructType(acc, def, f, path, segmentOverride);
     case TypeDefType.DiscriminatingUnion:
       return flattenDiscriminatingUnionType(acc, def, f, path, segmentOverride);
     default:
@@ -584,16 +584,16 @@ function flattenListType(
   return flattenTypeInternal(acc, elements, f, prefixOf(path, segmentOverride), segmentOverride);
 }
 
-function flattenRecordType(
+function flattenStructType(
   acc: InternalFlattenedTypes,
   {
     fields,
-  }: RecordTypeDef,
+  }: StructuredTypeDef,
   f: InternalTypeMapper,
   path: string,
   segmentOverride: string,
 ): InternalFlattenedTypes {
-  return flattenRecordTypeFields(acc, fields, f, path, segmentOverride);
+  return flattenStructTypeFields(acc, fields, f, path, segmentOverride);
 }
 
 function flattenDiscriminatingUnionType(
@@ -610,9 +610,9 @@ function flattenDiscriminatingUnionType(
     unions,
     function (acc, k, fields) {
       const key = prefixOf(path, k);
-      flattenRecordTypeFields(acc, fields, f, key, segmentOverride);
+      flattenStructTypeFields(acc, fields, f, key, segmentOverride);
       acc[key] = {
-        type: TypeDefType.Record,
+        type: TypeDefType.Structured,
         fields,
       };
       return acc;
@@ -627,9 +627,9 @@ function flattenDiscriminatingUnionType(
   );
 }
 
-function flattenRecordTypeFields(
+function flattenStructTypeFields(
   acc: InternalFlattenedTypes,
-  t: RecordTypeDefFields,
+  t: StructuredTypeDefFields,
   f: InternalTypeMapper,
   path: string,
   segmentOverride: string,

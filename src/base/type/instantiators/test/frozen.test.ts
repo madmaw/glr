@@ -7,7 +7,7 @@ import {
   discriminatingUnionTypeDef,
   listTypeDef,
   literalNumericTypeDef,
-  recordTypeDef,
+  structuredTypeDef,
 } from 'base/type/test/types';
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { expectEquals } from 'testing/helpers';
@@ -48,15 +48,15 @@ describe('freeze', function () {
     });
   });
 
-  describe('record', function () {
-    let record: ValueTypeOf<ReadonlyOf<typeof recordTypeDef>>;
-    const input: ValueTypeOf<typeof recordTypeDef> = {
+  describe('structured', function () {
+    let record: ValueTypeOf<ReadonlyOf<typeof structuredTypeDef>>;
+    const input: ValueTypeOf<typeof structuredTypeDef> = {
       list: undefined,
       literal: 1,
     };
 
     beforeEach(function () {
-      record = instantiateFrozen(readonlyOf(recordTypeDef), input);
+      record = instantiateFrozen(readonlyOf(structuredTypeDef), input);
     });
 
     it('keeps the value', function () {
@@ -67,7 +67,7 @@ describe('freeze', function () {
       expect(function () {
         // cast it back to being mutable so we can illegally modify it
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        (record as ValueTypeOf<typeof recordTypeDef>).literal = 1;
+        (record as ValueTypeOf<typeof structuredTypeDef>).literal = 1;
       }).toThrow();
       expect(record).toEqual(input);
     });

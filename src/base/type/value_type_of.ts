@@ -3,9 +3,9 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
-  type RecordTypeDefFields,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
+  type StructuredTypeField,
   type TypeDef,
 } from './definition';
 
@@ -25,7 +25,7 @@ type InternalValueTypeOf<
   : F extends LiteralTypeDef ? ValueTypeOfLiteral<F>
   : F extends NullableTypeDef ? ValueTypeOfNullable<F, Extra, NextDepth>
   : F extends ListTypeDef ? InternalValueTypeOfList<F, Extra, NextDepth>
-  : F extends RecordTypeDef ? InternalValueTypeOfRecord<F, Extra, NextDepth>
+  : F extends StructuredTypeDef ? InternalValueTypeOfStruct<F, Extra, NextDepth>
   : F extends DiscriminatingUnionTypeDef ? InternalValueTypeOfDiscriminatingUnion<F, Extra, NextDepth>
   : never;
 
@@ -47,43 +47,43 @@ type InternalValueTypeOfList<F extends ListTypeDef, Extra, Depth extends number>
     : InternalValueTypeOf<F['elements'], Extra, Depth>[])
   & (Extra);
 
-type MutableValueTypesOfFields<F extends RecordTypeDefFields> = {
-  readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, false, false> ? K : never]: F[K]['valueType'];
+type MutableValueTypesOfFields<F extends StructuredTypeDefFields> = {
+  readonly [K in keyof F as F[K] extends StructuredTypeField<TypeDef, false, false> ? K : never]: F[K]['valueType'];
 };
 
-type MutableOptionalValueTypesOfFields<F extends RecordTypeDefFields> = {
-  readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, false, true> ? K : never]: F[K]['valueType'];
+type MutableOptionalValueTypesOfFields<F extends StructuredTypeDefFields> = {
+  readonly [K in keyof F as F[K] extends StructuredTypeField<TypeDef, false, true> ? K : never]: F[K]['valueType'];
 };
 
-type ReadonlyValueTypesOfFields<F extends RecordTypeDefFields> = {
-  readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, true, false> ? K : never]: F[K]['valueType'];
+type ReadonlyValueTypesOfFields<F extends StructuredTypeDefFields> = {
+  readonly [K in keyof F as F[K] extends StructuredTypeField<TypeDef, true, false> ? K : never]: F[K]['valueType'];
 };
 
-type ReadonlyOptionalValueTypesOfFields<F extends RecordTypeDefFields> = {
-  readonly [K in keyof F as F[K] extends RecordTypeDefField<TypeDef, true, true> ? K : never]: F[K]['valueType'];
+type ReadonlyOptionalValueTypesOfFields<F extends StructuredTypeDefFields> = {
+  readonly [K in keyof F as F[K] extends StructuredTypeField<TypeDef, true, true> ? K : never]: F[K]['valueType'];
 };
 
-export type ValueTypeOfRecord<
-  F extends RecordTypeDef,
+export type ValueTypeOfStruct<
+  F extends StructuredTypeDef,
   Extra = {},
-> = InternalValueTypeOfRecord<F, Extra, DefaultDepth>;
+> = InternalValueTypeOfStruct<F, Extra, DefaultDepth>;
 
-type InternalValueTypeOfRecord<
-  F extends RecordTypeDef,
+type InternalValueTypeOfStruct<
+  F extends StructuredTypeDef,
   Extra,
   Depth extends number,
-> = InternalValueTypeOfRecordFields<F['fields'], Extra, Depth>;
+> = InternalValueTypeOfStructFields<F['fields'], Extra, Depth>;
 
-export type ValueTypeOfRecordFields<
-  F extends RecordTypeDefFields,
+export type ValueTypeOfStructFields<
+  F extends StructuredTypeDefFields,
   Extra,
-> = InternalValueTypeOfRecordFields<F, Extra, DefaultDepth>;
+> = InternalValueTypeOfStructFields<F, Extra, DefaultDepth>;
 
-type InternalValueTypeOfRecordFields<
-  F extends RecordTypeDefFields,
+type InternalValueTypeOfStructFields<
+  F extends StructuredTypeDefFields,
   Extra,
   Depth extends number,
-> = F extends RecordTypeDefFields ?
+> = F extends StructuredTypeDefFields ?
     & {
       -readonly [K in keyof MutableValueTypesOfFields<F>]-?: InternalValueTypeOf<
         MutableValueTypesOfFields<F>[K],
@@ -125,7 +125,7 @@ type InternalValueTypeOfDiscriminatingUnion<
   Extra,
   Depth extends number,
 > = F extends DiscriminatingUnionTypeDef<infer D, infer U> ? {
-    [K in keyof U]: InternalValueTypeOfRecordFields<U[K], Extra, Depth> & {
+    [K in keyof U]: InternalValueTypeOfStructFields<U[K], Extra, Depth> & {
       readonly [V in D]: K;
     };
   }[keyof U] & Extra

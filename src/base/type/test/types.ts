@@ -3,8 +3,8 @@ import {
   type ListTypeDef,
   type LiteralTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefField,
+  type StructuredTypeDef,
+  type StructuredTypeField,
   TypeDefType,
 } from 'base/type/definition';
 
@@ -24,11 +24,11 @@ export const listTypeDef: ListTypeDef<typeof literalNumericTypeDef> = {
   readonly: false,
 };
 
-export const recordTypeDef: RecordTypeDef<{
-  literal: RecordTypeDefField<typeof literalNumericTypeDef, false, true>,
-  list: RecordTypeDefField<typeof listTypeDef, false, true>,
+export const structuredTypeDef: StructuredTypeDef<{
+  literal: StructuredTypeField<typeof literalNumericTypeDef, false, true>,
+  list: StructuredTypeField<typeof listTypeDef, false, true>,
 }> = {
-  type: TypeDefType.Record,
+  type: TypeDefType.Structured,
   fields: {
     literal: {
       valueType: literalNumericTypeDef,
@@ -43,11 +43,11 @@ export const recordTypeDef: RecordTypeDef<{
   },
 };
 
-export const recordCoordinateTypeDef: RecordTypeDef<{
-  x: RecordTypeDefField<typeof literalNumericTypeDef, true, false>,
-  y: RecordTypeDefField<typeof literalNumericTypeDef, true, false>,
+export const structuredCoordinateTypeDef: StructuredTypeDef<{
+  x: StructuredTypeField<typeof literalNumericTypeDef, true, false>,
+  y: StructuredTypeField<typeof literalNumericTypeDef, true, false>,
 }> = {
-  type: TypeDefType.Record,
+  type: TypeDefType.Structured,
   fields: {
     x: {
       valueType: literalNumericTypeDef,
@@ -63,14 +63,14 @@ export const recordCoordinateTypeDef: RecordTypeDef<{
 };
 
 export const discriminatingUnionTypeDef: DiscriminatingUnionTypeDef<'disc', {
-  a: typeof recordTypeDef.fields,
-  b: typeof recordCoordinateTypeDef.fields,
+  a: typeof structuredTypeDef.fields,
+  b: typeof structuredCoordinateTypeDef.fields,
 }> = {
   type: TypeDefType.DiscriminatingUnion,
   discriminator: 'disc',
   unions: {
-    a: recordTypeDef.fields,
-    b: recordCoordinateTypeDef.fields,
+    a: structuredTypeDef.fields,
+    b: structuredCoordinateTypeDef.fields,
   },
 };
 
@@ -79,13 +79,13 @@ export const discriminatingUnionDiscriminatorTypeDef: LiteralTypeDef<'a' | 'b'> 
   value: undefined!,
 };
 
-export const nullableRecordCoordinateTypeDef: NullableTypeDef<typeof recordCoordinateTypeDef> = {
+export const nullableStructuredCoordinateTypeDef: NullableTypeDef<typeof structuredCoordinateTypeDef> = {
   type: TypeDefType.Nullable,
-  nonNullableTypeDef: recordCoordinateTypeDef,
+  nonNullableTypeDef: structuredCoordinateTypeDef,
 };
 
-export const listOfNullableCoordinatesTypeDef: ListTypeDef<typeof nullableRecordCoordinateTypeDef> = {
+export const listOfNullableCoordinatesTypeDef: ListTypeDef<typeof nullableStructuredCoordinateTypeDef> = {
   type: TypeDefType.List,
-  elements: nullableRecordCoordinateTypeDef,
+  elements: nullableStructuredCoordinateTypeDef,
   readonly: false,
 };

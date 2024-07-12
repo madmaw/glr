@@ -3,8 +3,8 @@ import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
   type NullableTypeDef,
-  type RecordTypeDef,
-  type RecordTypeDefFields,
+  type StructuredTypeDef,
+  type StructuredTypeDefFields,
   type TypeDef,
   TypeDefType,
 } from 'base/type/definition';
@@ -47,8 +47,8 @@ function becomeInternal<T extends TypeDef>(
       return becomeNullable(def, instantiator, target, prototype);
     case TypeDefType.List:
       return becomeList(def, instantiator, target, prototype);
-    case TypeDefType.Record:
-      return becomeRecord(def, instantiator, target, prototype);
+    case TypeDefType.Structured:
+      return becomeStruct(def, instantiator, target, prototype);
     case TypeDefType.DiscriminatingUnion:
       return becomeDiscriminatingUnion(def, instantiator, target, prototype);
     default:
@@ -105,11 +105,11 @@ function becomeList(
   return target;
 }
 
-function becomeRecordFields(
-  fields: RecordTypeDefFields,
+function becomeStructFields(
+  fields: StructuredTypeDefFields,
   instantiator: InternalInstantiator,
-  target: ValueTypeOf<RecordTypeDef>,
-  prototype: ValueTypeOf<RecordTypeDef>,
+  target: ValueTypeOf<StructuredTypeDef>,
+  prototype: ValueTypeOf<StructuredTypeDef>,
 ) {
   forEach(fields, function (key, {
     valueType,
@@ -132,15 +132,15 @@ function becomeRecordFields(
   return target;
 }
 
-function becomeRecord(
+function becomeStruct(
   {
     fields,
-  }: RecordTypeDef,
+  }: StructuredTypeDef,
   instantiator: InternalInstantiator,
-  target: ValueTypeOf<RecordTypeDef>,
-  prototype: ValueTypeOf<RecordTypeDef>,
-): ValueTypeOf<RecordTypeDef> {
-  return becomeRecordFields(fields, instantiator, target, prototype);
+  target: ValueTypeOf<StructuredTypeDef>,
+  prototype: ValueTypeOf<StructuredTypeDef>,
+): ValueTypeOf<StructuredTypeDef> {
+  return becomeStructFields(fields, instantiator, target, prototype);
 }
 
 function becomeDiscriminatingUnion(
@@ -162,5 +162,5 @@ function becomeDiscriminatingUnion(
     return instantiator(def, prototype);
   }
   const fields = unions[targetDiscriminator];
-  return becomeRecordFields(fields, instantiator, target, prototype);
+  return becomeStructFields(fields, instantiator, target, prototype);
 }
