@@ -1,9 +1,5 @@
 import { type UnionToIntersection } from 'base/lang';
-import {
-  type ReadonlyRecord,
-  reduce,
-} from 'base/record';
-import { UnreachableError } from 'base/unreachable_error';
+import { type ReadonlyRecord } from 'base/record';
 import {
   type DiscriminatingUnionTypeDef,
   type ListTypeDef,
@@ -13,12 +9,9 @@ import {
   type RecordTypeDefField,
   type RecordTypeDefFields,
   type TypeDef,
-  TypeDefType,
 } from './definition';
-import {
-  type PrefixOf,
-  prefixOf,
-} from './prefix_of';
+import { flattenMapOfType } from './flatten_map_of';
+import { type PrefixOf } from './prefix_of';
 
 type DefaultDepth = 21;
 
@@ -149,121 +142,14 @@ export function flattenTypesOfWithOverride<T extends TypeDef, Prefix extends str
   prefix: Prefix,
   override: Override,
 ): FlattenedOf<T, Prefix, Override> {
-  const acc: Record<string, TypeDef> = {};
-  flattenedOfInternal(acc, t, prefix, override);
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-  return acc as any;
-}
-
-function flattenedOfInternal(
-  acc: Record<string, TypeDef>,
-  t: TypeDef,
-  prefix: string,
-  override: string,
-): void {
-  acc[prefix] = t;
-  flattenedOfInternalChildren(acc, t, prefix, override);
-}
-
-function flattenedOfInternalChildren(
-  acc: Record<string, TypeDef>,
-  t: TypeDef,
-  prefix: string,
-  override: string,
-): void {
-  switch (t.type) {
-    case TypeDefType.Literal:
-      return flattenedOfLiteral();
-    case TypeDefType.Nullable:
-      return flattenedOfNullable(acc, t, prefix, override);
-    case TypeDefType.List:
-      return flattenedOfList(acc, t, prefix, override);
-    case TypeDefType.Record:
-      return flattenedOfRecord(acc, t, prefix, override);
-    case TypeDefType.DiscriminatingUnion:
-      return flattenedOfDiscriminatingUnion(acc, t, prefix, override);
-    default:
-      throw new UnreachableError(t);
-  }
-}
-
-function flattenedOfLiteral(): void {
-}
-
-function flattenedOfNullable(
-  acc: Record<string, TypeDef>,
-  { nonNullableTypeDef: valueType }: NullableTypeDef,
-  prefix: string,
-  override: string,
-): void {
-  flattenedOfInternalChildren(acc, valueType, prefix, override);
-}
-
-function flattenedOfList(
-  acc: Record<string, TypeDef>,
-  t: ListTypeDef,
-  prefix: string,
-  override: string,
-): void {
-  flattenedOfInternal(
-    acc,
-    t.elements,
-    prefixOf(prefix, override),
-    override,
-  );
-}
-
-function flattenedOfRecord(
-  acc: Record<string, TypeDef>,
-  t: RecordTypeDef,
-  prefix: string,
-  override: string,
-): void {
-  return flattenedOfRecordFields(acc, t.fields, prefix, override);
-}
-
-function flattenedOfDiscriminatingUnion(
-  acc: Record<string, TypeDef>,
-  t: DiscriminatingUnionTypeDef,
-  prefix: string,
-  override: string,
-): void {
-  acc[prefixOf(prefix, t.discriminator)] = {
-    type: TypeDefType.Literal,
-    value: undefined,
-  };
-  reduce<string, RecordTypeDefFields, Record<string, TypeDef>>(
-    t.unions,
-    function (acc, k, fields) {
-      const key = prefixOf(prefix, k);
-      flattenedOfRecordFields(acc, fields, key, override);
-      acc[key] = {
-        type: TypeDefType.Record,
-        fields,
-      };
-      return acc;
-    },
-    acc,
-  );
-}
-
-function flattenedOfRecordFields(
-  acc: Record<string, TypeDef>,
-  t: RecordTypeDefFields,
-  prefix: string,
-  override: string,
-): void {
-  reduce(
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  return flattenMapOfType<T, TypeDef, Prefix, Override>(
     t,
-    function (acc, k, field) {
-      flattenedOfInternal(
-        acc,
-        field.valueType,
-        prefixOf(prefix, k),
-        override,
-      );
-      return acc;
+    function (def) {
+      return def;
     },
-    acc,
-  );
+    prefix,
+    override,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) as any;
 }

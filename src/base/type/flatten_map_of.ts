@@ -40,7 +40,7 @@ type MaybePartial<
   : P
   : P;
 
-export type FlattenedRecordOf<
+export type FlattenedMapOf<
   F extends TypeDef,
   R,
   Prefix extends string = '',
@@ -207,7 +207,7 @@ type FlattenedOfDiscriminatingUnionChildren<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type InternalFlattenedValues = Record<string, any>;
-type InternalMapper = (
+type InternalValueMapper = (
   def: TypeDef,
   valuePath: string,
   typePath: string,
@@ -216,7 +216,7 @@ type InternalMapper = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => any;
 
-export function flattenMutableRecordOfValue<
+export function flattenMapOfMutableValue<
   T extends TypeDef,
   R,
   Prefix extends string,
@@ -231,15 +231,15 @@ export function flattenMutableRecordOfValue<
     setValue: (value: ValueTypeOf<T>) => void,
   ) => R,
   prefix: Prefix,
-): FlattenedRecordOf<T, R, Prefix> {
+): FlattenedMapOf<T, R, Prefix> {
   const acc: InternalFlattenedValues = {};
-  flattenInternal(
+  flattenValueInternal(
     acc,
     def,
     v,
     undefined,
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    f as InternalMapper,
+    f as InternalValueMapper,
     prefix,
     prefix,
   );
@@ -248,7 +248,9 @@ export function flattenMutableRecordOfValue<
   return acc as any;
 }
 
-export function flattenRecordOfValue<
+// flatten value
+
+export function flattenMapOfValue<
   T extends TypeDef,
   R,
   Prefix extends string,
@@ -262,15 +264,27 @@ export function flattenRecordOfValue<
     value: ValueTypeOf<T>,
   ) => R,
   prefix: Prefix,
-): FlattenedRecordOf<T, R, Prefix> {
+): FlattenedMapOf<T, R, Prefix> {
   const acc: InternalFlattenedValues = {};
-  flattenInternal(
+  flattenValueInternal(
     acc,
     def,
     v,
     undefined,
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    f as InternalMapper,
+    function (
+      def: TypeDef,
+      valuePath: string,
+      typePath: string,
+      value: ValueTypeOf<TypeDef>,
+    ) {
+      return f(
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        def as T,
+        valuePath,
+        typePath,
+        value,
+      );
+    },
     prefix,
     prefix,
   );
@@ -279,12 +293,12 @@ export function flattenRecordOfValue<
   return acc as any;
 }
 
-function flattenInternal(
+function flattenValueInternal(
   acc: InternalFlattenedValues,
   def: TypeDef,
   value: ValueTypeOf<TypeDef>,
   setValue: ((value: ValueTypeOf<TypeDef>) => void) | undefined,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ): InternalFlattenedValues {
@@ -296,7 +310,7 @@ function flattenChildValues(
   acc: InternalFlattenedValues,
   def: TypeDef,
   value: ValueTypeOf<TypeDef>,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ): InternalFlattenedValues {
@@ -326,7 +340,7 @@ function flattenNullableValue(
     nonNullableTypeDef: valueType,
   }: NullableTypeDef,
   value: ValueTypeOf<NullableTypeDef>,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ): InternalFlattenedValues {
@@ -347,7 +361,7 @@ function flattenListValue(
   acc: InternalFlattenedValues,
   def: ListTypeDef,
   value: ValueTypeOf<ListTypeDef>,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ): InternalFlattenedValues {
@@ -365,7 +379,7 @@ function flattenListValue(
       const setValue = function (item: ValueTypeOf<TypeDef>) {
         value[i] = item;
       };
-      return flattenInternal(
+      return flattenValueInternal(
         acc,
         elements,
         e,
@@ -385,7 +399,7 @@ function flattenFieldValues(
   // no way to know anything about the type here
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ) {
@@ -395,7 +409,7 @@ function flattenFieldValues(
       const setValue = function (i: ValueTypeOf<TypeDef>) {
         value[key] = i;
       };
-      return flattenInternal(
+      return flattenValueInternal(
         acc,
         field.valueType,
         value[key],
@@ -413,7 +427,7 @@ function flattenRecordValue(
   acc: InternalFlattenedValues,
   def: RecordTypeDef,
   value: ValueTypeOf<RecordTypeDef>,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ) {
@@ -434,7 +448,7 @@ function flattenDiscriminatingUnionValue(
   acc: InternalFlattenedValues,
   def: DiscriminatingUnionTypeDef,
   value: ValueTypeOf<DiscriminatingUnionTypeDef>,
-  f: InternalMapper,
+  f: InternalValueMapper,
   valuePath: string,
   typePath: string,
 ) {
@@ -464,5 +478,174 @@ function flattenDiscriminatingUnionValue(
     f,
     prefixOf(valuePath, disc),
     prefixOf(typePath, disc),
+  );
+}
+
+// flatten type
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type InternalFlattenedTypes = Record<string, any>;
+
+export function flattenMapOfType<
+  T extends TypeDef,
+  R,
+  Prefix extends string,
+  SegmentOverride extends string = 'n',
+>(
+  def: T,
+  f: (
+    def: T,
+    path: string,
+  ) => R,
+  prefix: Prefix,
+  segmentOverride: SegmentOverride,
+): FlattenedMapOf<T, R, Prefix, SegmentOverride> {
+  const acc = flattenTypeInternal(
+    {},
+    def,
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    f as InternalTypeMapper,
+    prefix,
+    segmentOverride,
+  );
+  // cast to type-safe value
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+  return acc as any;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type InternalTypeMapper = (def: TypeDef, path: string) => any;
+
+function flattenTypeInternal(
+  acc: InternalFlattenedTypes,
+  def: TypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  acc[path] = f(def, path);
+  return flattenChildTypes(
+    acc,
+    def,
+    f,
+    path,
+    segmentOverride,
+  );
+}
+
+function flattenChildTypes(
+  acc: InternalFlattenedTypes,
+  def: TypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  switch (def.type) {
+    case TypeDefType.Literal:
+      return flattenLiteralType(acc);
+    case TypeDefType.Nullable:
+      return flattenNullableType(acc, def, f, path, segmentOverride);
+    case TypeDefType.List:
+      return flattenListType(acc, def, f, path, segmentOverride);
+    case TypeDefType.Record:
+      return flattenRecordType(acc, def, f, path, segmentOverride);
+    case TypeDefType.DiscriminatingUnion:
+      return flattenDiscriminatingUnionType(acc, def, f, path, segmentOverride);
+    default:
+      throw new UnreachableError(def);
+  }
+}
+
+function flattenLiteralType(acc: InternalFlattenedValues): InternalFlattenedTypes {
+  return acc;
+}
+
+function flattenNullableType(
+  acc: InternalFlattenedTypes,
+  {
+    nonNullableTypeDef,
+  }: NullableTypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  return flattenChildTypes(acc, nonNullableTypeDef, f, path, segmentOverride);
+}
+
+function flattenListType(
+  acc: InternalFlattenedTypes,
+  {
+    elements,
+  }: ListTypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  return flattenTypeInternal(acc, elements, f, prefixOf(path, segmentOverride), segmentOverride);
+}
+
+function flattenRecordType(
+  acc: InternalFlattenedTypes,
+  {
+    fields,
+  }: RecordTypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  return flattenRecordTypeFields(acc, fields, f, path, segmentOverride);
+}
+
+function flattenDiscriminatingUnionType(
+  acc: InternalFlattenedTypes,
+  {
+    unions,
+    discriminator,
+  }: DiscriminatingUnionTypeDef,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  return reduce(
+    unions,
+    function (acc, k, fields) {
+      const key = prefixOf(path, k);
+      flattenRecordTypeFields(acc, fields, f, key, segmentOverride);
+      acc[key] = {
+        type: TypeDefType.Record,
+        fields,
+      };
+      return acc;
+    },
+    {
+      ...acc,
+      [prefixOf(path, discriminator)]: {
+        type: TypeDefType.Literal,
+        value: undefined,
+      },
+    },
+  );
+}
+
+function flattenRecordTypeFields(
+  acc: InternalFlattenedTypes,
+  t: RecordTypeDefFields,
+  f: InternalTypeMapper,
+  path: string,
+  segmentOverride: string,
+): InternalFlattenedTypes {
+  return reduce(
+    t,
+    function (acc, k, field) {
+      flattenTypeInternal(
+        acc,
+        field.valueType,
+        f,
+        prefixOf(path, k),
+        segmentOverride,
+      );
+      return acc;
+    },
+    acc,
   );
 }

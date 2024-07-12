@@ -17,9 +17,9 @@ import {
 import { type ValueTypeOf } from 'base/type/value_type_of';
 import { UnreachableError } from 'base/unreachable_error';
 import {
-  flattenMutableRecordOfValue,
-  flattenRecordOfValue,
-} from './flatten_record_of';
+  flattenMapOfMutableValue,
+  flattenMapOfValue,
+} from './flatten_map_of';
 import {
   type PrefixOf,
   prefixOf,
@@ -260,7 +260,7 @@ export function flattenValuesOf<
 ): FlattenedValuesOf<T, false, Prefix> {
   // cast to type-safe value
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return flattenRecordOfValue<T, InternalFlattenedValue, Prefix>(
+  return flattenMapOfValue<T, InternalFlattenedValue, Prefix>(
     def,
     v,
     function (_def: T, _valuePath: string, typePath: string, value: ValueTypeOf<T>) {
@@ -284,7 +284,7 @@ export function flattenMutableValuesOf<
 ): FlattenedValuesOf<T, true, Prefix> {
   // cast to type-safe value
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return flattenMutableRecordOfValue<T, InternalFlattenedValue, Prefix>(
+  return flattenMapOfMutableValue<T, InternalFlattenedValue, Prefix>(
     def,
     v,
     function (
